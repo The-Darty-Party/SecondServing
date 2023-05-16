@@ -23,7 +23,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!_isPhoneNumberValid(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a valid Malaysian phone number.')),
+        const SnackBar(
+            content: Text('Please enter a valid Malaysian phone number.')),
       );
       return;
     }
@@ -47,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Second Serving'),
+        title: const Text('Second Serving'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Username',
                 border: OutlineInputBorder(),
               ),
@@ -64,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
@@ -73,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
@@ -84,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _phoneNumberController, // Add the phone number controller to the TextField
               keyboardType:
                   TextInputType.number, // Limit the input to numbers only
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Phone Number',
                 border: OutlineInputBorder(),
               ),
@@ -92,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () => _register(context),
-              child: Text('Register'),
+              child: const Text('Register'),
             ),
           ],
         ),
