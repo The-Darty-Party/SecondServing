@@ -1,4 +1,5 @@
 //register_screen.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_auth_service.dart';
@@ -42,6 +43,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPhoneNumberValid(String phoneNumber) {
     RegExp regExp = RegExp(r'^01[0-46-9]-*[0-9]{7,8}$');
     return regExp.hasMatch(phoneNumber);
+  }
+
+  Future<void> signUp(
+      String email, String password, String name, String phone) async {
+    try {
+      // create user account in Firebase Authentication
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // save user data to Firestore
+      CollectionReference usersRef =
+          FirebaseFirestore.instance.collection('users');
+      String uid = userCredential.user!.uid;
+      await usersRef.doc(uid).set({
+        'name': name,
+        'email': email,
+        'phone': phone,
+      });
+
+      print('User created successfully!');
+    } catch (e) {
+      print('Error creating user: $e');
+    }
   }
 
   @override
