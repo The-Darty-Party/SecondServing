@@ -30,31 +30,29 @@ class LoginScreen extends StatelessWidget {
   final firebaseAuth = FirebaseAuthService();
 
   void _login(BuildContext context) async {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
+  String username = _usernameController.text;
+  String password = _passwordController.text;
 
-    firebaseAuth.signInWithEmailAndPassword(username, password).then((value) {
-      final snackBar = SnackBar(content: Text(value.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    });
+  firebaseAuth.signInWithEmailAndPassword(username, password).then((value) {
+    final snackBar = SnackBar(content: Text(value.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  });
 
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProfileScreen(
-              user: username,
-              email: 'example@example.com', // Replace with the user's email
-            ),
-          ),
-        );
-      }
-    });
-  }
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    if (user == null) {
+      print('User is currently signed out!');
+    } else {
+      print('User is signed in!');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfileScreen(),
+        ),
+      );
+    }
+  });
+}
+
 
   void _navigateToRegisterScreen(BuildContext context) {
     // Navigate to the RegisterScreen

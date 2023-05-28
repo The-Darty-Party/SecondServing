@@ -1,12 +1,7 @@
-//register_screen.dart
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../services/firebase_auth_service.dart';
-
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 class RegisterScreen extends StatefulWidget {
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
@@ -17,7 +12,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
-  final firebaseAuth = FirebaseAuthService();
 
   void _register(BuildContext context) async {
     String username = _usernameController.text;
@@ -31,46 +25,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
-String? result = await firebaseAuth.registerWithEmailAndPassword(email, password);
 
-    if (result == null) {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      String uid = userCredential.user!.uid;
+      await signUp(email, password, username, phoneNumber, uid);
+
       Navigator.pushNamed(context, '/email_verification');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
-bool _isPhoneNumberValid(String phoneNumber) {
+
+  bool _isPhoneNumberValid(String phoneNumber) {
     RegExp regExp = RegExp(r'^01[0-46-9]-*[0-9]{7,8}$');
     return regExp.hasMatch(phoneNumber);
   }
 
-  
+  Future<void> signUp(String email, String password, String name, String phone, String uid) async {
+    try {
+      // save user data to Firestore
+      CollectionReference usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).set({
+        'name': name,
+        'email': email,
+        'phone': phone,
+      });
 
-Future<void> signUp(String email, String password, String name, String phone) async {
-  try {
-    // create user account in Firebase Authentication
-    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    
-    // save user data to Firestore
-    CollectionReference usersRef = FirebaseFirestore.instance.collection('users');
-    String uid = userCredential.user!.uid;
-    await usersRef.doc(uid).set({
-      'name': name,
-      'email': email,
-      'phone': phone,
-    });
-    
-    print('User created successfully!');
-  } catch (e) {
-    print('Error creating user: $e');
+      print('User created successfully!');
+    } catch (e) {
+      print('Error creating user: $e');
+    }
   }
-}
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -108,17 +100,15 @@ Future<void> signUp(String email, String password, String name, String phone) as
               ),
             ),
             const SizedBox(height: 16.0),
-
             TextField(
-              controller: _phoneNumberController, // Add the phone number controller to the TextField
-              keyboardType: TextInputType.number, // Limit the input to numbers only
+              controller: _phoneNumberController,
+              keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Phone Number',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16.0),
-
             ElevatedButton(
               onPressed: () => _register(context),
               child: Text('Register'),
