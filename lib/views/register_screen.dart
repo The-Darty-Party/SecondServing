@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'food_shared_screen.dart';
 import 'otp_screen.dart';
 import '/main.dart';
 import '/services/firebase_auth_service.dart';
-
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -22,14 +22,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseAuthService _firebaseAuthService = FirebaseAuthService();
 
-
   void _register(BuildContext context) async {
     String username = _usernameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
     String phoneNumber = _phoneNumberController.text;
 
-    // Perform validation checks before registering
     if (!_isPhoneNumberValid(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a valid Malaysian phone number.')),
@@ -38,19 +36,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-
-      // Register user with email and password
-      UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-
       String uid = userCredential.user!.uid;
       await signUp(email, password, username, phoneNumber, uid);
 
-      Navigator.pushNamed(context, '/email_verification');
+      // Navigator.pushNamed(context, '/email_verification');
+      if (userCredential.user != null) {
+        // User registration successful, send OTP message and navigate to OTP screen
+        await _firebaseAuthService.sendOtpMessage(phoneNumber);
+        _navigateToOtpScreen(phoneNumber, userCredential.user!.uid);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -58,12 +58,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-
-
-  Future<void> signUp(String email, String password, String name, String phone, String uid) async {
+  Future<void> signUp(String email, String password, String name, String phone,
+      String uid) async {
     try {
       // save user data to Firestore
-      CollectionReference usersRef = FirebaseFirestore.instance.collection('users');
+      CollectionReference usersRef =
+          FirebaseFirestore.instance.collection('users');
       await usersRef.doc(uid).set({
         'name': name,
         'email': email,
@@ -73,19 +73,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       print('User created successfully!');
     } catch (e) {
       print('Error creating user: $e');
-    }
-  }
-
-      if (userCredential.user != null) {
-        // User registration successful, send OTP message and navigate to OTP screen
-        await _firebaseAuthService.sendOtpMessage(phoneNumber);
-        _navigateToOtpScreen(phoneNumber, userCredential.user!.uid);
-      }
-    } on FirebaseAuthException catch (e) {
-      // Show error message if registration fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'An error occurred during registration.')),
-      );
     }
   }
 
@@ -108,10 +95,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool _isPhoneNumberValid(String phoneNumber) {
-  RegExp regExp = RegExp(r'^\+[1-9]\d{1,14}$');
-  return regExp.hasMatch(phoneNumber);
-}
-
+    RegExp regExp = RegExp(r'^\+[1-9]\d{1,14}$');
+    return regExp.hasMatch(phoneNumber);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -178,10 +164,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             TextField(
               controller: _phoneNumberController,
-
               style: TextStyle(color: Colors.green),
               keyboardType: TextInputType.phone,
-
               decoration: InputDecoration(
                 labelText: 'Phone Number',
                 prefixIcon: Icon(Icons.phone, color: Colors.green),

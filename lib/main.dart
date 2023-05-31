@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'view_models/FoodReceiverScreen.dart';
+import 'views/food_shared_screen.dart';
 import 'views/register_screen.dart';
 
 import 'services/firebase_auth_service.dart';
@@ -36,12 +36,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   void _login(BuildContext context) async {
-  String username = _usernameController.text;
-  String password = _passwordController.text;
-
+    String username = _usernameController.text;
+    String password = _passwordController.text;
 
     if (username.isNotEmpty && password.isNotEmpty) {
-      String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
+      String? result =
+          await firebaseAuth.signInWithEmailAndPassword(username, password);
       if (result == 'Logged in successfully!') {
         Navigator.push(
           context,
@@ -52,11 +52,11 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
-      final snackBar = SnackBar(content: Text('Please enter username and password'));
+      final snackBar =
+          SnackBar(content: Text('Please enter username and password'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
-
 
   void _navigateToRegisterScreen(BuildContext context) {
     // Navigate to the RegisterScreen
@@ -69,9 +69,12 @@ class _LoginScreenState extends State<LoginScreen> {
   void _forgotPassword(BuildContext context) async {
     String username = _usernameController.text;
     if (username.isNotEmpty) {
-      FirebaseAuth.instance.sendPasswordResetEmail(email: username).then((value) {
+      FirebaseAuth.instance
+          .sendPasswordResetEmail(email: username)
+          .then((value) {
         final snackBar = SnackBar(
-          content: Text('Password reset email sent. Please check your email inbox.'),
+          content:
+              Text('Password reset email sent. Please check your email inbox.'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }).catchError((error) {
@@ -125,7 +128,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icon(Icons.lock, color: Colors.green),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                      _isPasswordVisible
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                       color: Colors.green,
                     ),
                     onPressed: () {

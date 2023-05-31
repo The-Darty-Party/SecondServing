@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../views/profile_screen.dart';
+import 'profile_screen.dart';
+
 class Meal {
   final String name;
   final String description;
@@ -27,7 +28,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   final CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
-  
+
   List<Meal> _meals = [];
 
   @override
@@ -58,7 +59,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
     }
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -119,7 +120,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProfileScreen(user: user!),
+                    builder: (context) => ProfileScreen(),
                   ),
                 );
               },
@@ -190,7 +191,8 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           // TODO: Implement plus button functionality
         },
         child: Icon(Icons.add),
-        backgroundColor: Colors.green, // Set the floating action button color to green
+        backgroundColor:
+            Colors.green, // Set the floating action button color to green
       ),
     );
   }
