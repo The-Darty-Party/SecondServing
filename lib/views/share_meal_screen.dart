@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,10 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '/widgets/image_picker_button.dart';
 import '../widgets/coordinate_button.dart';
 import 'package:flutter/material.dart';
-import 'package:secondserving/models/meal_model.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class DishForm extends StatefulWidget {
   @override
@@ -20,14 +16,17 @@ class _DishFormState extends State<DishForm> {
   TextEditingController _dishNameController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
-  String _currentCoordinates = '';
+  GeoPoint? _currentCoordinates;
   File? _pickedImage;
+  UploadTask? uploadTask;
+  Reference? storageRef;
+
   @override
   void initState() {
     super.initState();
   }
 
-  void _updateCoordinates(Future<String> data) {
+  void _updateCoordinates(Future<GeoPoint> data) {
     setState(() {
       data.then((value) {
         _currentCoordinates = value;
@@ -42,11 +41,18 @@ class _DishFormState extends State<DishForm> {
   }
 
   Future<void> _uploadData() async {
-    final bytes = await _pickedImage!.readAsBytes();
-    final base64Image = base64Encode(bytes);
+    final FirebaseStorage storage =
+        FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
+    storageRef = storage.ref().child('$_pickedImage');
+    storageRef = storage.ref().child('$_pickedImage');
+    if (_pickedImage != null && storageRef != null) {
+      uploadTask = storageRef!.putFile(_pickedImage!);
+    }
+
     final data = {
       'description': '${_descriptionController.text}',
       'location': '${_addressController.text}',
+      'coordinates': _currentCoordinates,
       'name': '${_dishNameController.text}',
       'photo': '$_pickedImage',
     };
@@ -54,7 +60,7 @@ class _DishFormState extends State<DishForm> {
     _dishNameController.clear();
     _descriptionController.clear();
     _addressController.clear();
-    _currentCoordinates = '';
+    _currentCoordinates = GeoPoint(0, 0);
   }
 
   @override
@@ -104,9 +110,6 @@ class _DishFormState extends State<DishForm> {
               const SizedBox(height: 16.0),
               Text('Image: ${_pickedImage?.path ?? 'No image selected'}'),
               const SizedBox(height: 16.0),
-              Text(_currentCoordinates,
-                  style:
-                      const TextStyle(color: Color.fromARGB(255, 41, 147, 46))),
               const SizedBox(height: 16.0),
               CoordinateButton(onCoordinatesChanged: _updateCoordinates),
               const SizedBox(height: 16.0),

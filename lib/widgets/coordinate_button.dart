@@ -1,8 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 class CoordinateButton extends StatelessWidget {
-  final Function(Future<String>) onCoordinatesChanged;
+  final Function(Future<GeoPoint>) onCoordinatesChanged;
   CoordinateButton({required this.onCoordinatesChanged});
 
   @override
@@ -15,18 +16,18 @@ class CoordinateButton extends StatelessWidget {
     );
   }
 
-  Future<String> _getCurrentLocation() async {
+  Future<GeoPoint> _getCurrentLocation() async {
     Position? position;
     try {
       position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      return 'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
+      return GeoPoint(position.latitude, position.longitude);
     } catch (e) {
       print('Error: $e');
     }
 
-    return 'Could not get location';
+    return GeoPoint(0, 0);
   }
 }
