@@ -46,7 +46,6 @@ class _DishFormState extends State<DishForm> {
     final FirebaseStorage storage =
         FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
     storageRef = storage.ref().child('$_pickedImage');
-    storageRef = storage.ref().child('$_pickedImage');
     if (_pickedImage != null && storageRef != null) {
       uploadTask = storageRef!.putFile(_pickedImage!);
     }
