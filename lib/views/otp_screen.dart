@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '/main.dart'; // Replace with the appropriate screen import
+import 'package:secondserving/views/login_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -29,7 +29,9 @@ class _OtpScreenState extends State<OtpScreen> {
       // OTP verification successful, navigate to the main screen
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => LoginScreen()), // Replace with the appropriate screen
+        MaterialPageRoute(
+            builder: (context) =>
+                LoginScreen()), // Replace with the appropriate screen
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {

@@ -63,6 +63,7 @@ class _DishFormState extends State<DishForm> {
     _addressController.clear();
     _currentCoordinates = GeoPoint(0, 0);
     EasyLoading.dismiss();
+    Navigator.of(context).pop();
   }
 
   @override

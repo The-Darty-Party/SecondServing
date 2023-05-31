@@ -1,6 +1,8 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:secondserving/views/share_meal_screen.dart';
 import 'profile_screen.dart';
 
 class Meal {
@@ -39,6 +41,21 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
 
   Future<void> _fetchMeals() async {
     try {
+      // Create a storage reference from our app
+      final storageRef = FirebaseStorage.instance.ref();
+
+// Create a reference with an initial file path and name
+      final pathReference = storageRef.child("images/stars.jpg");
+
+// Create a reference to a file from a Google Cloud Storage URI
+      final gsReference = FirebaseStorage.instance
+          .refFromURL("gs://secondserving-ef1f1.appspot.com/.jpg");
+
+// Create a reference from an HTTPS URL
+// Note that in the URL, characters are URL escaped!
+      final httpsReference = FirebaseStorage.instance.refFromURL(
+          "https://firebasestorage.googleapis.com/b/secondserving-ef1f1.appspot.com/o/");
+
       final QuerySnapshot<Map<String, dynamic>> snapshot =
           await FirebaseFirestore.instance.collection('meals').get();
       final List<Meal> meals = snapshot.docs.map((doc) {
@@ -189,6 +206,10 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // TODO: Implement plus button functionality
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => DishForm()),
+          );
         },
         child: Icon(Icons.add),
         backgroundColor:
