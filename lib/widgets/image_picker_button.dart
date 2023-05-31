@@ -30,7 +30,11 @@ class _ImagePickerButtonState extends State<ImagePickerButton> {
     return Column(
       children: [
         _pickedImage != null
-            ? Image.file(_pickedImage!)
+            ? Image.file(
+                _pickedImage!,
+                width: 400.0,
+                height: 400.0,
+              )
             : Placeholder(
                 color: Color.fromARGB(58, 62, 64, 66),
               ), // Display the picked image or a placeholder if no image is picked
