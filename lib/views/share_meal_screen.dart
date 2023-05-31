@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '/widgets/image_picker_button.dart';
 import '../widgets/coordinate_button.dart';
@@ -32,6 +35,28 @@ class _DishFormState extends State<DishForm> {
     });
   }
 
+  void _updateImage(File image) {
+    setState(() {
+      _pickedImage = image;
+    });
+  }
+
+  Future<void> _uploadData() async {
+    final bytes = await _pickedImage!.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final data = {
+      'description': '${_descriptionController.text}',
+      'location': '${_addressController.text}',
+      'name': '${_dishNameController.text}',
+      'photo': '$_pickedImage',
+    };
+    await FirebaseFirestore.instance.collection('meals').add(data);
+    _dishNameController.clear();
+    _descriptionController.clear();
+    _addressController.clear();
+    _currentCoordinates = '';
+  }
+
   @override
   void dispose() {
     // Dispose of the controller when the widget is disposed.
@@ -54,7 +79,7 @@ class _DishFormState extends State<DishForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ImagePickerButton(onImageChanged: ),
+              ImagePickerButton(onImageChanged: _updateImage),
               const SizedBox(height: 16.0),
               TextField(
                 controller: _dishNameController,
@@ -77,6 +102,8 @@ class _DishFormState extends State<DishForm> {
                 ),
               ),
               const SizedBox(height: 16.0),
+              Text('Image: ${_pickedImage?.path ?? 'No image selected'}'),
+              const SizedBox(height: 16.0),
               Text(_currentCoordinates,
                   style:
                       const TextStyle(color: Color.fromARGB(255, 41, 147, 46))),
@@ -86,17 +113,13 @@ class _DishFormState extends State<DishForm> {
               ElevatedButton(
                 onPressed: () {
                   // TODO: Implement form submission logic
-                  String dishName = _dishNameController.text;
-                  String description = _descriptionController.text;
-                  String address = _addressController.text;
+                  // String dishName = _dishNameController.text;
+                  // String description = _descriptionController.text;
+                  // String address = _addressController.text;
 
                   // Perform form submission actions here
-
+                  _uploadData();
                   // Clear the form fields
-                  _dishNameController.clear();
-                  _descriptionController.clear();
-                  _addressController.clear();
-                  _currentCoordinates = '';
 
                   // Show a snackbar or navigate to a new screen to indicate successful submission
                 },

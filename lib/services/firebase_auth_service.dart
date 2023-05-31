@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseAuthService {
@@ -37,7 +35,7 @@ class FirebaseAuthService {
       );
 
       // Send email verification
-      await userCredential.user!.sendEmailVerification();
+      // await userCredential.user!.sendEmailVerification();
 
       return "Signed up successfully!";
     } on FirebaseAuthException catch (e) {
@@ -46,7 +44,8 @@ class FirebaseAuthService {
       } else if (e.code == 'email-already-in-use') {
         return 'The account already exists for that email.';
       }
-      return 'Something went wrong';
+    } catch (e) {
+      return "An error occurred while trying to sign up.";
     }
   }
 

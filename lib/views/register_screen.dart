@@ -1,8 +1,11 @@
 //register_screen.dart
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_auth_service.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -29,46 +32,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
-    String? result =
-        await firebaseAuth.registerWithEmailAndPassword(email, password);
 
-    if (result == null) {
-      Navigator.pushNamed(context, '/email_verification');
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(result)));
-    }
+    EasyLoading.show(status: 'loading...');
+    firebaseAuth.registerWithEmailAndPassword(email, password).then(
+      (value) {
+        print("Value is: $value");
+        if (value == null) {
+          print("The value is null");
+          Navigator.pushNamed(context, '/email_verification');
+        } else {
+          print("The value is not null");
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(value.toString())));
+          EasyLoading.dismiss();
+          Navigator.of(context).pop();
+        }
+      },
+    );
+
+    // Navigator.of(context).pop();
   }
 
   bool _isPhoneNumberValid(String phoneNumber) {
     RegExp regExp = RegExp(r'^01[0-46-9]-*[0-9]{7,8}$');
     return regExp.hasMatch(phoneNumber);
-  }
-
-  Future<void> signUp(
-      String email, String password, String name, String phone) async {
-    try {
-      // create user account in Firebase Authentication
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // save user data to Firestore
-      CollectionReference usersRef =
-          FirebaseFirestore.instance.collection('users');
-      String uid = userCredential.user!.uid;
-      await usersRef.doc(uid).set({
-        'name': name,
-        'email': email,
-        'phone': phone,
-      });
-
-      print('User created successfully!');
-    } catch (e) {
-      print('Error creating user: $e');
-    }
   }
 
   @override
