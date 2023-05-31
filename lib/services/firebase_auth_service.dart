@@ -71,16 +71,17 @@ class FirebaseAuthService {
       );
 
       // Send email verification
-      await userCredential.user!.sendEmailVerification();
+      // await userCredential.user!.sendEmailVerification();
 
-      return userCredential.user!.uid;
+      return "Signed up successfully!";
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
+        return 'The password provided is too weak.';
       } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
+        return 'The account already exists for that email.';
       }
-      return e.message;
+    } catch (e) {
+      return "An error occurred while trying to sign up.";
     }
   }
 

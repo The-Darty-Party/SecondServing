@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,6 +8,7 @@ import 'food_shared_screen.dart';
 import 'otp_screen.dart';
 import '/main.dart';
 import '/services/firebase_auth_service.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -30,10 +32,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!_isPhoneNumberValid(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a valid Malaysian phone number.')),
+        const SnackBar(
+            content: Text('Please enter a valid Malaysian phone number.')),
       );
       return;
     }
+
 
     try {
       UserCredential userCredential =
@@ -99,10 +103,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return regExp.hasMatch(phoneNumber);
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+
         title: Text(
           'Second Serving',
           style: TextStyle(
@@ -116,6 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.green),
           onPressed: () => Navigator.of(context).pop(),
         ),
+
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -133,8 +140,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             TextField(
               controller: _usernameController,
+
               style: TextStyle(color: Colors.green),
               decoration: InputDecoration(
+
                 labelText: 'Username',
                 prefixIcon: Icon(Icons.person, color: Colors.green),
                 border: OutlineInputBorder(),
@@ -143,8 +152,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             TextField(
               controller: _emailController,
+
               style: TextStyle(color: Colors.green),
               decoration: InputDecoration(
+
                 labelText: 'Email',
                 prefixIcon: Icon(Icons.email, color: Colors.green),
                 border: OutlineInputBorder(),
@@ -155,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _passwordController,
               style: TextStyle(color: Colors.green),
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 prefixIcon: Icon(Icons.lock, color: Colors.green),
                 border: OutlineInputBorder(),
@@ -163,10 +174,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16.0),
             TextField(
+
               controller: _phoneNumberController,
               style: TextStyle(color: Colors.green),
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
+
                 labelText: 'Phone Number',
                 prefixIcon: Icon(Icons.phone, color: Colors.green),
                 border: OutlineInputBorder(),
@@ -175,8 +188,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () => _register(context),
+
               child: Text('Register'),
               style: ElevatedButton.styleFrom(primary: Colors.green),
+
             ),
           ],
         ),
