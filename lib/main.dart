@@ -36,8 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   void _login(BuildContext context) async {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
+  String username = _usernameController.text;
+  String password = _passwordController.text;
+
 
     if (username.isNotEmpty && password.isNotEmpty) {
       String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
@@ -55,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
+
 
   void _navigateToRegisterScreen(BuildContext context) {
     // Navigate to the RegisterScreen

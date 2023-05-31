@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'otp_screen.dart';
 import '/main.dart';
 import '/services/firebase_auth_service.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,8 +18,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
+
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseAuthService _firebaseAuthService = FirebaseAuthService();
+
 
   void _register(BuildContext context) async {
     String username = _usernameController.text;
@@ -32,11 +38,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
+
       // Register user with email and password
       UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+
         email: email,
         password: password,
       );
+
+
+      String uid = userCredential.user!.uid;
+      await signUp(email, password, username, phoneNumber, uid);
+
+      Navigator.pushNamed(context, '/email_verification');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+
+
+  Future<void> signUp(String email, String password, String name, String phone, String uid) async {
+    try {
+      // save user data to Firestore
+      CollectionReference usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).set({
+        'name': name,
+        'email': email,
+        'phone': phone,
+      });
+
+      print('User created successfully!');
+    } catch (e) {
+      print('Error creating user: $e');
+    }
+  }
 
       if (userCredential.user != null) {
         // User registration successful, send OTP message and navigate to OTP screen
@@ -73,6 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   RegExp regExp = RegExp(r'^\+[1-9]\d{1,14}$');
   return regExp.hasMatch(phoneNumber);
 }
+
 
   @override
   Widget build(BuildContext context) {
@@ -139,8 +178,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16.0),
             TextField(
               controller: _phoneNumberController,
+
               style: TextStyle(color: Colors.green),
               keyboardType: TextInputType.phone,
+
               decoration: InputDecoration(
                 labelText: 'Phone Number',
                 prefixIcon: Icon(Icons.phone, color: Colors.green),
