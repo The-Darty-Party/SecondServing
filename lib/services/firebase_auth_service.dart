@@ -1,15 +1,51 @@
-import 'dart:ffi';
-
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  // Sign in with email and password
-  Future<String?> signInWithEmailAndPassword(
-      String email, String password) async {
+  String? _verificationId; // Stores the verification ID
+
+  // Send OTP message for phone number verification
+  Future<void> sendOtpMessage(String phoneNumber) async {
+    final PhoneVerificationCompleted verificationCompleted = (PhoneAuthCredential credential) async {
+      await _firebaseAuth.signInWithCredential(credential);
+    };
+
+    final PhoneVerificationFailed verificationFailed = (FirebaseAuthException e) {
+      print('Verification failed: ${e.message}');
+    };
+
+    final PhoneCodeSent codeSent = (String verificationId, int? resendToken) {
+      _verificationId = verificationId; // Store the verification ID
+    };
+
+    final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout = (String verificationId) {
+      print('Code auto retrieval timeout. Verification ID: $verificationId');
+    };
+
     try {
-      final UserCredential userCredential =
-          await _firebaseAuth.signInWithEmailAndPassword(
+      final phoneNumberFormatted = '+$phoneNumber';
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumberFormatted,
+        verificationCompleted: verificationCompleted,
+        verificationFailed: verificationFailed,
+        codeSent: codeSent,
+        codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
+        timeout: Duration(seconds: 60),
+      );
+    } catch (e) {
+      print('Failed to send OTP message: ${e.toString()}');
+    }
+  }
+
+  // Retrieve the verification ID
+  String? getVerificationId() {
+    return _verificationId;
+  }
+
+  // Sign in with email and password
+  Future<String?> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      final UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -27,11 +63,9 @@ class FirebaseAuthService {
   }
 
   // Register with email and password
-  Future<String?> registerWithEmailAndPassword(
-      String email, String password) async {
+  Future<String?> registerWithEmailAndPassword(String email, String password) async {
     try {
-      final UserCredential userCredential =
-          await _firebaseAuth.createUserWithEmailAndPassword(
+      final UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -55,5 +89,3 @@ class FirebaseAuthService {
     await _firebaseAuth.signOut();
   }
 }
-
-
