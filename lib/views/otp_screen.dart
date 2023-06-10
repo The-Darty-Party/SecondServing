@@ -16,31 +16,39 @@ class _OtpScreenState extends State<OtpScreen> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   void _verifyOtp(BuildContext context) async {
-    String otp = _otpController.text.trim();
+  String otp = _otpController.text.trim();
+
+  if (widget.verificationId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Verification ID is null. Please try again.')),
+    );
+    return;
+  }
+
+  try {
     PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
       verificationId: widget.verificationId,
       smsCode: otp,
     );
 
-    try {
-      // Sign in with the provided phone authentication credential
-      await _firebaseAuth.signInWithCredential(phoneAuthCredential);
+    // Sign in with the provided phone authentication credential
+    await _firebaseAuth.signInWithCredential(phoneAuthCredential);
 
-      // OTP verification successful, navigate to the main screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                LoginScreen()), // Replace with the appropriate screen
-        (route) => false,
-      );
-    } on FirebaseAuthException catch (e) {
-      // Show error message if OTP verification fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('OTP verification failed. Please try again.')),
-      );
-    }
+    // OTP verification successful, navigate to the main screen
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (route) => false,
+    );
+  } on FirebaseAuthException catch (e) {
+    // Show error message if OTP verification fails
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('OTP verification failed. Please try again.')),
+    );
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
