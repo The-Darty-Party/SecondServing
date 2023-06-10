@@ -39,6 +39,8 @@ class _ImagePickerButtonState extends State<ImagePickerButton> {
                 color: Color.fromARGB(58, 62, 64, 66),
               ), // Display the picked image or a placeholder if no image is picked
         ElevatedButton(
+          style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.green)),
           onPressed: () => _pickImage(ImageSource.camera),
           child: Text('Take a photo'),
         ),

@@ -9,6 +9,8 @@ class CoordinateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
+      style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(Colors.green)),
       onPressed: () {
         onCoordinatesChanged(_getCurrentLocation());
       },
