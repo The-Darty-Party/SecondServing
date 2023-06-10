@@ -45,19 +45,31 @@ class _DishFormState extends State<DishForm> {
     EasyLoading.show(status: 'Uploading...');
     final FirebaseStorage storage =
         FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
-    storageRef = storage.ref().child('$_pickedImage');
+
+    // Generate a unique filename for the uploaded image
+    String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    storageRef = storage.ref().child(fileName);
     if (_pickedImage != null && storageRef != null) {
       uploadTask = storageRef!.putFile(_pickedImage!);
     }
 
+    // Get the download URL of the uploaded image
+    String? photoUrl;
+    if (uploadTask != null) {
+      TaskSnapshot taskSnapshot = await uploadTask!.whenComplete(() {});
+      photoUrl = await taskSnapshot.ref.getDownloadURL();
+    }
+
     final data = {
-      'description': '${_descriptionController.text}',
-      'location': '${_addressController.text}',
+      'description': _descriptionController.text,
+      'location': _addressController.text,
       'coordinates': _currentCoordinates,
-      'name': '${_dishNameController.text}',
-      'photo': '$_pickedImage',
+      'name': _dishNameController.text,
+      'photo': photoUrl,
     };
     await FirebaseFirestore.instance.collection('meals').add(data);
+
     _dishNameController.clear();
     _descriptionController.clear();
     _addressController.clear();
@@ -81,6 +93,7 @@ class _DishFormState extends State<DishForm> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Share your meal'),
+        backgroundColor: Colors.green[700],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -119,13 +132,16 @@ class _DishFormState extends State<DishForm> {
               CoordinateButton(onCoordinatesChanged: _updateCoordinates),
               const SizedBox(height: 16.0),
               ElevatedButton(
+                style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.green)),
                 onPressed: () {
                   // Perform form submission actions here
                   _uploadData();
                   // Clear the form fields
 
                   // Show a snackbar or navigate to a new screen to indicate successful submission
-                  SnackBar snackBar = SnackBar(
+                  SnackBar snackBar = const SnackBar(
                     content: Text('Your meal has been shared!'),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
