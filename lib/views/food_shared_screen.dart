@@ -31,57 +31,12 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   final CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
 
-  List<Meal> _meals = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchMeals();
-  }
-
-  Future<void> _fetchMeals() async {
-    try {
-      // Create a storage reference from our app
-      final storageRef = FirebaseStorage.instance.ref();
-
-// Create a reference with an initial file path and name
-      final pathReference = storageRef.child("images/stars.jpg");
-
-// Create a reference to a file from a Google Cloud Storage URI
-      final gsReference = FirebaseStorage.instance
-          .refFromURL("gs://secondserving-ef1f1.appspot.com/.jpg");
-
-// Create a reference from an HTTPS URL
-// Note that in the URL, characters are URL escaped!
-      final httpsReference = FirebaseStorage.instance.refFromURL(
-          "https://firebasestorage.googleapis.com/b/secondserving-ef1f1.appspot.com/o/");
-
-      final QuerySnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance.collection('meals').get();
-      final List<Meal> meals = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Meal(
-          name: data['name'] ?? '',
-          description: data['description'] ?? '',
-          location: data['location'] ?? '',
-          photo: data['photo'] ?? '',
-        );
-      }).toList();
-
-      setState(() {
-        _meals = meals;
-      });
-    } catch (e) {
-      print('Error fetching meals: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Find Food Nearby'),
-        backgroundColor: Colors.green, // Set the app bar color to green
+        backgroundColor: Colors.green,
         actions: [
           IconButton(
             icon: Icon(Icons.history),
@@ -96,7 +51,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.green, // Set the drawer header color to green
+                color: Colors.green,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +102,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               leading: Icon(Icons.chat),
               onTap: () {
                 // TODO: Implement the chat functionality
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
               },
             ),
             ListTile(
@@ -161,45 +116,68 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           ],
         ),
       ),
-      body: ListView.builder(
-        itemCount: _meals.length,
-        itemBuilder: (context, index) {
-          final meal = _meals[index];
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              contentPadding: EdgeInsets.all(16),
-              leading: SizedBox(
-                width: 80,
-                height: 80,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    meal.photo,
-                    fit: BoxFit.cover,
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('meals').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final List<Meal> meals = snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return Meal(
+              name: data['name'] ?? '',
+              description: data['description'] ?? '',
+              location: data['location'] ?? '',
+              photo: data['photo'] ?? '',
+            );
+          }).toList();
+
+          return ListView.builder(
+            itemCount: meals.length,
+            itemBuilder: (context, index) {
+              final meal = meals[index];
+              return Card(
+                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  leading: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        meal.photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    meal.name,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 8),
+                      Text(
+                        'Location: ${meal.location}',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        meal.description,
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              title: Text(
-                meal.name,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 8),
-                  Text(
-                    'Location: ${meal.location}',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    meal.description,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
+              );
+            },
           );
         },
       ),
@@ -212,8 +190,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           );
         },
         child: Icon(Icons.add),
-        backgroundColor:
-            Colors.green, // Set the floating action button color to green
+        backgroundColor: Colors.green,
       ),
     );
   }
