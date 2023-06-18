@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
+import 'chat_history_screen.dart';
 import 'profile_screen.dart';
 
 class Meal {
@@ -102,7 +103,10 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               leading: Icon(Icons.chat),
               onTap: () {
                 // TODO: Implement the chat functionality
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatHistoryScreen()),
+                );
               },
             ),
             ListTile(
