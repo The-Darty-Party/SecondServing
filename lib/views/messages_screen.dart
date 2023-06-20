@@ -34,6 +34,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         'sender': senderName,
         'text': message,
         'timestamp': Timestamp.now(),
+        'uid': widget.user!.uid,
       }).catchError((error) {
         print('Error sending message: $error');
       });
@@ -162,20 +163,22 @@ class Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
-    final isIncomingMessage = uid != currentUser?.uid;
+    final isCurrentUser = uid == currentUser?.uid;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Align(
-        alignment: isIncomingMessage ? Alignment.topLeft : Alignment.topRight,
+        alignment: isCurrentUser ? Alignment.topRight : Alignment.topLeft,
         child: Container(
           decoration: BoxDecoration(
-            color: isIncomingMessage ? Colors.green : Colors.blue,
+            color: isCurrentUser ? Colors.blue : Colors.green,
             borderRadius: BorderRadius.circular(10.0),
           ),
           padding: const EdgeInsets.all(8.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: isCurrentUser
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               Text(
                 sender,
