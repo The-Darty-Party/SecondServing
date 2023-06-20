@@ -5,24 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
 import 'profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-class Meal {
-  final String mealId; // Add mealId field
-  final String name;
-  final String description;
-  final String location;
-  final String photo;
-  String status;
-
-  Meal({
-    required this.mealId,
-    required this.name,
-    required this.description,
-    required this.location,
-    required this.photo,
-    required this.status,
-  });
-}
+import 'meal_details.dart';
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
@@ -37,6 +20,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       FirebaseFirestore.instance.collection('users');
 
   List<Meal> _meals = [];
+  bool _sortMealsByNewest = false;
 
   @override
   void initState() {
@@ -45,28 +29,49 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   }
 
   Future<void> _fetchMeals() async {
-    try {
-      final QuerySnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance.collection('meals').get();
-      final List<Meal> meals = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Meal(
-          mealId: doc.id,
-          name: data['name'] ?? '',
-          description: data['description'] ?? '',
-          location: data['location'] ?? '',
-          photo: data['photo'] ?? '',
-          status: data['status'] ?? '',
-        );
-      }).toList();
+  try {
+    final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    Query<Map<String, dynamic>> mealsQuery =
+        FirebaseFirestore.instance.collection('meals');
 
-      setState(() {
-        _meals = meals;
-      });
-    } catch (e) {
-      print('Error fetching meals: $e');
+    if (_sortMealsByNewest) {
+      mealsQuery = mealsQuery.orderBy('date', descending: true);
     }
+
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await mealsQuery.get();
+    final List<Meal> meals = snapshot.docs.map((doc) {
+      final data = doc.data();
+      final String mealStatus = data['status'] ?? '';
+      final String mealDonorID = data['donorID'] ?? '';
+      final String mealReceiverID = data['receiverID'] ?? '';
+
+      if (mealStatus == 'booked' &&
+          mealDonorID != userId &&
+          mealReceiverID != userId) {
+        return null; // Skip this meal if it's booked and not assigned to the user
+      }
+
+      final Timestamp timestamp = data['date'] ?? Timestamp.now(); // Get the timestamp
+
+      return Meal(
+        mealId: doc.id,
+        name: data['name'] ?? '',
+        description: data['description'] ?? '',
+        location: data['location'] ?? '',
+        photo: data['photo'] ?? '',
+        status: mealStatus,
+        date: timestamp.toDate().toString(), // Convert timestamp to string
+      );
+    }).whereType<Meal>().toList();
+
+    setState(() {
+      _meals = meals;
+    });
+  } catch (e) {
+    print('Error fetching meals: $e');
   }
+}
+
 
   void _navigateToMealDetails(Meal meal) {
     Navigator.push(
@@ -88,6 +93,15 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
             icon: Icon(Icons.history),
             onPressed: () {
               // TODO: Implement history button functionality
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              setState(() {
+                _sortMealsByNewest = !_sortMealsByNewest;
+                _fetchMeals();
+              });
             },
           ),
         ],
@@ -113,27 +127,18 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Username: ${user?.displayName ?? "N/A"}',
+                    user?.email ?? '',
                     style: TextStyle(
+                      color: Colors.white,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Email: ${user?.email ?? "N/A"}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
             ListTile(
-              title: Text('Profile'),
               leading: Icon(Icons.person),
+              title: Text('Profile'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -144,19 +149,12 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               },
             ),
             ListTile(
-              title: Text('Chat'),
-              leading: Icon(Icons.chat),
-              onTap: () {
-                // TODO: Implement the chat functionality
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: Text('Sign Out'),
               leading: Icon(Icons.logout),
-              onTap: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.popUntil(context, (route) => route.isFirst);
+              title: Text('Logout'),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],
@@ -224,180 +222,4 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       ),
     );
   }
-}
-
-class MealDetailsScreen extends StatefulWidget {
-  final Meal meal;
-
-  const MealDetailsScreen({required this.meal});
-
-  @override
-  _MealDetailsScreenState createState() => _MealDetailsScreenState();
-}
-
-class _MealDetailsScreenState extends State<MealDetailsScreen> {
-  void _launchGoogleMaps(String coordinates) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=$coordinates';
-    try {
-      await launch(
-        url,
-        forceWebView: true,
-        enableJavaScript: true, // Enable JavaScript support
-      );
-    } catch (e) {
-      print('Error launching Google Maps website: $e');
-      // Handle the error gracefully or show an error message to the user
-    }
-  }
-
-  void _uploadData(String mealId) async {
-  try {
-    final DocumentSnapshot<Map<String, dynamic>> mealDoc = await FirebaseFirestore.instance
-        .collection('meals')
-        .doc(mealId)
-        .get();
-    
-    final String mealStatus = mealDoc.data()?['status'] ?? '';
-    
-    if (mealStatus == 'booked') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Meal is already booked!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      await FirebaseFirestore.instance
-          .collection('meals')
-          .doc(mealId)
-          .update({'status': 'booked'});
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Meal booked successfully!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  } catch (e) {
-    print('Error updating meal status: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to book the meal. Please try again.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-}
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.meal.name),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Image.network(
-              widget.meal.photo,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Name:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  widget.meal.name,
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Description:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  widget.meal.description,
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Location:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  widget.meal.location,
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Status:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  widget.meal.status,
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        // TODO: Implement chat functionality
-                      },
-                      child: Text('Chat'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _launchGoogleMaps(widget.meal.location);
-                      },
-                      child: Text('Google Map'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _uploadData(widget.meal.mealId);
-                      },
-                      child: Text('Book'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-void main() {
-  runApp(const MaterialApp(
-    home: FoodReceiverScreen(),
-  ));
 }
