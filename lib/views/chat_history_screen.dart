@@ -10,6 +10,7 @@ class ChatHistoryScreen extends StatelessWidget {
   String uid = "";
   User? user = FirebaseAuth.instance.currentUser;
   FirebaseAuthService _firebaseAuthService = FirebaseAuthService();
+  final User? currentUser = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
     if (user != null) {
@@ -20,7 +21,9 @@ class ChatHistoryScreen extends StatelessWidget {
         title: Text('Chats'),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: chatsCollection.snapshots(),
+        stream: chatsCollection
+            .where('participants', arrayContains: currentUser!.uid)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
