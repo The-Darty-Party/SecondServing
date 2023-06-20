@@ -6,9 +6,11 @@ import 'package:secondserving/views/share_meal_screen.dart';
 import 'chat_history_screen.dart';
 import 'profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'messages_screen.dart';
 
 class Meal {
   final String mealId; // Add mealId field
+  final String donorId;
   final String name;
   final String description;
   final String location;
@@ -17,6 +19,7 @@ class Meal {
 
   Meal({
     required this.mealId,
+    required this.donorId,
     required this.name,
     required this.description,
     required this.location,
@@ -53,6 +56,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
         final data = doc.data();
         return Meal(
           mealId: doc.id,
+          donorId: data['donorID'] ?? '',
           name: data['name'] ?? '',
           description: data['description'] ?? '',
           location: data['location'] ?? '',
@@ -255,45 +259,45 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   }
 
   void _uploadData(String mealId) async {
-  try {
-    final DocumentSnapshot<Map<String, dynamic>> mealDoc = await FirebaseFirestore.instance
-        .collection('meals')
-        .doc(mealId)
-        .get();
-    
-    final String mealStatus = mealDoc.data()?['status'] ?? '';
-    
-    if (mealStatus == 'booked') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Meal is already booked!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      await FirebaseFirestore.instance
-          .collection('meals')
-          .doc(mealId)
-          .update({'status': 'booked'});
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> mealDoc =
+          await FirebaseFirestore.instance
+              .collection('meals')
+              .doc(mealId)
+              .get();
 
+      final String mealStatus = mealDoc.data()?['status'] ?? '';
+
+      if (mealStatus == 'booked') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Meal is already booked!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        await FirebaseFirestore.instance
+            .collection('meals')
+            .doc(mealId)
+            .update({'status': 'booked'});
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Meal booked successfully!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error updating meal status: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Meal booked successfully!'),
+          content: Text('Failed to book the meal. Please try again.'),
           duration: Duration(seconds: 2),
         ),
       );
     }
-  } catch (e) {
-    print('Error updating meal status: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to book the meal. Please try again.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +377,12 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                     ElevatedButton(
                       onPressed: () {
                         // TODO: Implement chat functionality
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MessagesScreen(
+                                  receiverUID: widget.meal.donorId)),
+                        );
                       },
                       child: Text('Chat'),
                     ),
@@ -398,7 +408,6 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 }
-
 
 void main() {
   runApp(const MaterialApp(
