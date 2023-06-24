@@ -5,7 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
 import 'profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'meal_details.dart';
+import 'meal_details.dart' as meal_details;
+import 'history.dart' as history;
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
@@ -14,12 +15,29 @@ class FoodReceiverScreen extends StatefulWidget {
   _FoodReceiverScreenState createState() => _FoodReceiverScreenState();
 }
 
+class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('History'),
+        backgroundColor: Colors.green,
+      ),
+      body: Center(
+        child: Text('This is the history page.'),
+      ),
+    );
+  }
+}
+
 class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   final CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
 
-  List<Meal> _meals = [];
+  List<meal_details.Meal> _meals = [];
   bool _sortMealsByNewest = false;
 
   @override
@@ -29,55 +47,55 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   }
 
   Future<void> _fetchMeals() async {
-  try {
-    final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    Query<Map<String, dynamic>> mealsQuery =
-        FirebaseFirestore.instance.collection('meals');
+    try {
+      final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      Query<Map<String, dynamic>> mealsQuery =
+          FirebaseFirestore.instance.collection('meals');
 
-    if (_sortMealsByNewest) {
-      mealsQuery = mealsQuery.orderBy('date', descending: true);
-    }
-
-    final QuerySnapshot<Map<String, dynamic>> snapshot = await mealsQuery.get();
-    final List<Meal> meals = snapshot.docs.map((doc) {
-      final data = doc.data();
-      final String mealStatus = data['status'] ?? '';
-      final String mealDonorID = data['donorID'] ?? '';
-      final String mealReceiverID = data['receiverID'] ?? '';
-
-      if (mealStatus == 'booked' &&
-          mealDonorID != userId &&
-          mealReceiverID != userId) {
-        return null; // Skip this meal if it's booked and not assigned to the user
+      if (_sortMealsByNewest) {
+        mealsQuery = mealsQuery.orderBy('date', descending: true);
       }
 
-      final Timestamp timestamp = data['date'] ?? Timestamp.now(); // Get the timestamp
+      final QuerySnapshot<Map<String, dynamic>> snapshot =
+          await mealsQuery.get();
+      final List<meal_details.Meal> meals = snapshot.docs.map((doc) {
+        final data = doc.data();
+        final String mealStatus = data['status'] ?? '';
+        final String mealDonorID = data['donorID'] ?? '';
+        final String mealReceiverID = data['receiverID'] ?? '';
 
-      return Meal(
-        mealId: doc.id,
-        name: data['name'] ?? '',
-        description: data['description'] ?? '',
-        location: data['location'] ?? '',
-        photo: data['photo'] ?? '',
-        status: mealStatus,
-        date: timestamp.toDate().toString(), // Convert timestamp to string
-      );
-    }).whereType<Meal>().toList();
+        if (mealStatus == 'booked' &&
+            mealDonorID != userId &&
+            mealReceiverID != userId) {
+          return null; // Skip this meal if it's booked and not assigned to the user
+        }
 
-    setState(() {
-      _meals = meals;
-    });
-  } catch (e) {
-    print('Error fetching meals: $e');
+        final Timestamp timestamp = data['date'] ?? Timestamp.now(); // Get the timestamp
+
+        return meal_details.Meal(
+          mealId: doc.id,
+          name: data['name'] ?? '',
+          description: data['description'] ?? '',
+          location: data['location'] ?? '',
+          photo: data['photo'] ?? '',
+          status: mealStatus,
+          date: timestamp.toDate().toString(), // Convert timestamp to string
+        );
+      }).whereType<meal_details.Meal>().toList();
+
+      setState(() {
+        _meals = meals;
+      });
+    } catch (e) {
+      print('Error fetching meals: $e');
+    }
   }
-}
 
-
-  void _navigateToMealDetails(Meal meal) {
+  void _navigateToMealDetails(meal_details.Meal meal) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MealDetailsScreen(meal: meal),
+        builder: (context) => meal_details.MealDetailsScreen(meal: meal),
       ),
     );
   }
@@ -92,7 +110,10 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           IconButton(
             icon: Icon(Icons.history),
             onPressed: () {
-              // TODO: Implement history button functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => history.HistoryScreen()),
+              );
             },
           ),
           IconButton(
@@ -193,7 +214,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'description: ${meal.description}',
+                    'Description: ${meal.description}',
                     style: TextStyle(fontSize: 14),
                   ),
                   SizedBox(height: 4),
