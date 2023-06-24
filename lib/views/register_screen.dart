@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'food_shared_screen.dart';
-import 'otp_screen.dart';
-
-import '/services/firebase_auth_service.dart';
 import 'package:secondserving/views/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -21,7 +16,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _phoneNumberController = TextEditingController();
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseAuthService _firebaseAuthService = FirebaseAuthService();
 
   void _register(BuildContext context) async {
     String username = _usernameController.text;
@@ -32,7 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_isPhoneNumberValid(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please enter a valid Malaysian phone number.')),
+          content: Text('Please enter a valid Malaysian phone number.'),
+        ),
       );
       return;
     }
@@ -47,12 +42,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       String uid = userCredential.user!.uid;
       await signUp(email, password, username, phoneNumber, uid);
 
-      // Navigator.pushNamed(context, '/email_verification');
-      if (userCredential.user != null) {
-        // User registration successful, send OTP message and navigate to OTP screen
-        await _firebaseAuthService.sendOtpMessage(phoneNumber);
-        _navigateToOtpScreen(phoneNumber, userCredential.user!.uid);
-      }
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (route) => false,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -63,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> signUp(String email, String password, String name, String phone,
       String uid) async {
     try {
-      // save user data to Firestore
+      // Save user data to Firestore
       CollectionReference usersRef =
           FirebaseFirestore.instance.collection('users');
       await usersRef.doc(uid).set({
@@ -76,24 +70,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       print('Error creating user: $e');
     }
-  }
-
-  void _navigateToOtpScreen(String phoneNumber, String verificationId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OtpScreen(
-          verificationId: verificationId,
-        ),
-      ),
-    ).then((value) {
-      // OTP verification completed, navigate back to the Login screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-        (route) => false,
-      );
-    });
   }
 
   bool _isPhoneNumberValid(String phoneNumber) {
