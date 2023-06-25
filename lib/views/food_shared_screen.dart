@@ -43,7 +43,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
 
   String _userName = '';
   List<Meal> _meals = [];
-  bool _sortMealsByNewest = false;
+  /*bool _sortMealsByNewest = false;*/
 
   @override
   void initState() {
@@ -75,9 +75,9 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       Query<Map<String, dynamic>> mealsQuery =
           FirebaseFirestore.instance.collection('meals');
 
-      if (_sortMealsByNewest) {
+      
         mealsQuery = mealsQuery.orderBy('date', descending: true);
-      }
+      
 
       final QuerySnapshot<Map<String, dynamic>> snapshot =
           await mealsQuery.get();
@@ -147,7 +147,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               );
             },
           ),
-          IconButton(
+          /*IconButton(
             icon: Icon(Icons.filter_list),
             onPressed: () {
               setState(() {
@@ -155,7 +155,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                 _fetchMeals();
               });
             },
-          ),
+          ),*/
         ],
       ),
       drawer: Drawer(
