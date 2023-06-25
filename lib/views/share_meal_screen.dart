@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'package:secondserving/services/firebase_auth_service.dart';
 
 import '/widgets/image_picker_button.dart';
 import '../widgets/coordinate_button.dart';
@@ -18,6 +20,7 @@ class _DishFormState extends State<DishForm> {
   TextEditingController _dishNameController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
+  final User? user = FirebaseAuth.instance.currentUser;
   GeoPoint? _currentCoordinates;
   File? _pickedImage;
   UploadTask? uploadTask;
@@ -43,7 +46,8 @@ class _DishFormState extends State<DishForm> {
   }
 
   Future<void> _openAddressAutocomplete() async {
-    final apiKey = 'AIzaSyBSE-UAl4xNmb6Fk7y4ey2h6ayyeHQu2kw'; // Replace with your own API key
+    final apiKey =
+        'AIzaSyBSE-UAl4xNmb6Fk7y4ey2h6ayyeHQu2kw'; // Replace with your own API key
 
     Prediction? prediction = await PlacesAutocomplete.show(
       context: context,
@@ -62,7 +66,8 @@ class _DishFormState extends State<DishForm> {
 
   Future<void> _uploadData() async {
     EasyLoading.show(status: 'Uploading...');
-    final FirebaseStorage storage = FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
+    final FirebaseStorage storage =
+        FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
 
     // Generate a unique filename for the uploaded image
     String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -81,6 +86,7 @@ class _DishFormState extends State<DishForm> {
 
     final data = {
       'description': _descriptionController.text,
+      'donorID': user!.uid,
       'location': _addressController.text,
       'coordinates': _currentCoordinates,
       'name': _dishNameController.text,
