@@ -3,30 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
+import '../models/meal_model.dart';
 import 'chat_history_screen.dart';
 import 'profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'messages_screen.dart';
-
-class Meal {
-  final String mealId; // Add mealId field
-  final String donorId;
-  final String name;
-  final String description;
-  final String location;
-  final String photo;
-  String status;
-
-  Meal({
-    required this.mealId,
-    required this.donorId,
-    required this.name,
-    required this.description,
-    required this.location,
-    required this.photo,
-    required this.status,
-  });
-}
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
@@ -234,10 +215,14 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   }
 }
 
+//* Details screen
 class MealDetailsScreen extends StatefulWidget {
   final Meal meal;
-
-  const MealDetailsScreen({required this.meal});
+  final User? user = FirebaseAuth.instance.currentUser;
+  final chatsCollection = FirebaseFirestore.instance.collection('chats');
+  final usersCollection = FirebaseFirestore.instance.collection('users');
+  late DocumentReference? _currentChatRef;
+  MealDetailsScreen({required this.meal});
 
   @override
   _MealDetailsScreenState createState() => _MealDetailsScreenState();
@@ -295,6 +280,47 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           content: Text('Failed to book the meal. Please try again.'),
           duration: Duration(seconds: 2),
         ),
+      );
+    }
+  }
+
+  Future<void> _getCurrentChat() async {
+    final querySnapshot =
+        await widget.chatsCollection.where('chatId', arrayContainsAny: [
+      '${widget.user!.uid}${widget.meal.donorId}',
+      '${widget.meal.donorId}${widget.user!.uid}'
+    ]).get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      setState(() {
+        widget._currentChatRef = querySnapshot.docs.first.reference;
+      });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                MessagesScreen(receiverUID: widget.meal.donorId)),
+      );
+    } else {
+      final newChatDoc = await widget.chatsCollection.add({
+        'currentUserId': widget.user!.uid,
+        'peerId': widget.meal.donorId,
+        'participants': [widget.user!.uid, widget.meal.donorId],
+        'chatId': [
+          '${widget.meal.donorId}${widget.user!.uid}',
+          '${widget.meal.donorId}${widget.user!.uid}'
+        ],
+        'lastMessage': '',
+      });
+
+      setState(() {
+        widget._currentChatRef = newChatDoc;
+      });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                MessagesScreen(receiverUID: widget.meal.donorId)),
       );
     }
   }
@@ -374,30 +400,28 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        // TODO: Implement chat functionality
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MessagesScreen(
-                                  receiverUID: widget.meal.donorId)),
-                        );
-                      },
-                      child: Text('Chat'),
-                    ),
+                    if (widget.meal.donorId != widget.user!.uid)
+                      ElevatedButton(
+                        onPressed: () {
+                          // TODO: Implement chat functionality
+
+                          _getCurrentChat();
+                        },
+                        child: Text('Chat'),
+                      ),
                     ElevatedButton(
                       onPressed: () {
                         _launchGoogleMaps(widget.meal.location);
                       },
                       child: Text('Google Map'),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _uploadData(widget.meal.mealId);
-                      },
-                      child: Text('Book'),
-                    ),
+                    if (widget.meal.donorId != widget.user!.uid)
+                      ElevatedButton(
+                        onPressed: () {
+                          _uploadData(widget.meal.mealId);
+                        },
+                        child: Text('Book'),
+                      ),
                   ],
                 ),
               ],
@@ -407,10 +431,4 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(const MaterialApp(
-    home: FoodReceiverScreen(),
-  ));
 }
