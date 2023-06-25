@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'food_shared_screen.dart';
-import 'otp_screen.dart';
 
 import '/services/firebase_auth_service.dart';
 import 'package:secondserving/views/login_screen.dart';
@@ -51,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (userCredential.user != null) {
         // User registration successful, send OTP message and navigate to OTP screen
         await _firebaseAuthService.sendOtpMessage(phoneNumber);
-        _navigateToOtpScreen(phoneNumber, userCredential.user!.uid);
+        _NavigateToFoodSharedScreen(phoneNumber, userCredential.user!.uid);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,22 +77,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  void _navigateToOtpScreen(String phoneNumber, String verificationId) {
+  void _NavigateToFoodSharedScreen(String phoneNumber, String verificationId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => OtpScreen(
-          verificationId: verificationId,
-        ),
-      ),
-    ).then((value) {
-      // OTP verification completed, navigate back to the Login screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-        (route) => false,
-      );
-    });
+      MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
+    );
   }
 
   bool _isPhoneNumberValid(String phoneNumber) {
