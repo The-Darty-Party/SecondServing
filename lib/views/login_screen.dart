@@ -21,20 +21,28 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login(BuildContext context) async {
     String username = _usernameController.text;
     String password = _passwordController.text;
-
+    EasyLoading.show(status: 'Authenticating...');
     if (username.isNotEmpty && password.isNotEmpty) {
+
       String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
+
       if (result == 'Logged in successfully!') {
+        EasyLoading.dismiss();
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ReportedUsersScreen()),
         );
       } else {
+        EasyLoading.dismiss();
         final snackBar = SnackBar(content: Text(result!));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
-      final snackBar = SnackBar(content: Text('Please enter username and password'));
+
+      EasyLoading.dismiss();
+      final snackBar =
+          SnackBar(content: Text('Please enter username and password'));
+
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }

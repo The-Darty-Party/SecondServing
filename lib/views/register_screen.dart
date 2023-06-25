@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
+import 'food_shared_screen.dart';
+
+import '/services/firebase_auth_service.dart';
+
 import 'package:secondserving/views/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -42,11 +47,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       String uid = userCredential.user!.uid;
       await signUp(email, password, username, phoneNumber, uid);
 
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
         (route) => false,
       );
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -71,6 +78,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       print('Error creating user: $e');
     }
   }
+
+
+  void _NavigateToFoodSharedScreen(String phoneNumber, String verificationId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
+    );
+  }
+
 
   bool _isPhoneNumberValid(String phoneNumber) {
     RegExp regExp = RegExp(r'^\+[1-9]\d{1,14}$');
