@@ -3,15 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
+import '../models/meal_model.dart';
+import 'chat_history_screen.dart';
 import 'profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'meal_details.dart';
+
+import 'meal_details.dart' as meal_details;
+import 'history.dart' as history;
+
+import 'messages_screen.dart';
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
 
   @override
   _FoodReceiverScreenState createState() => _FoodReceiverScreenState();
+}
+
+class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('History'),
+        backgroundColor: Colors.green,
+      ),
+      body: Center(
+        child: Text('This is the history page.'),
+      ),
+    );
+  }
 }
 
 class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
@@ -28,6 +51,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
     _fetchUserName();
     _fetchMeals();
   }
+
 
   Future<void> _fetchUserName() async {
     User? currentUser = _firebaseAuth.currentUser;
@@ -52,36 +76,45 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       Query<Map<String, dynamic>> mealsQuery =
           FirebaseFirestore.instance.collection('meals');
 
+
       if (_sortMealsByNewest) {
         mealsQuery = mealsQuery.orderBy('date', descending: true);
       }
 
       final QuerySnapshot<Map<String, dynamic>> snapshot =
           await mealsQuery.get();
-      final List<Meal> meals = snapshot.docs.map((doc) {
-        final data = doc.data();
-        final String mealStatus = data['status'] ?? '';
-        final String mealDonorID = data['donorID'] ?? '';
-        final String mealReceiverID = data['receiverID'] ?? '';
 
-        if (mealStatus == 'booked' &&
-            mealDonorID != userId &&
-            mealReceiverID != userId) {
-          return null; // Skip this meal if it's booked and not assigned to the user
-        }
+      final List<Meal> meals = snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            final String mealStatus = data['status'] ?? '';
+            final String mealDonorID = data['donorID'] ?? '';
+            final String mealReceiverID = data['receiverID'] ?? '';
 
-        final Timestamp timestamp = data['date'] ?? Timestamp.now(); // Get the timestamp
+            if (mealStatus == 'booked' &&
+                mealDonorID != userId &&
+                mealReceiverID != userId) {
+              return null; // Skip this meal if it's booked and not assigned to the user
+            }
 
-        return Meal(
-          mealId: doc.id,
-          name: data['name'] ?? '',
-          description: data['description'] ?? '',
-          location: data['location'] ?? '',
-          photo: data['photo'] ?? '',
-          status: mealStatus,
-          date: timestamp.toDate().toString(), // Convert timestamp to string
-        );
-      }).whereType<Meal>().toList();
+            final Timestamp timestamp =
+                data['date'] ?? Timestamp.now(); // Get the timestamp
+
+            return Meal(
+              mealId: doc.id,
+              donorId: data['donorID'] ?? '',
+              name: data['name'] ?? '',
+              description: data['description'] ?? '',
+              location: data['location'] ?? '',
+              photo: data['photo'] ?? '',
+              status: mealStatus,
+              date:
+                  timestamp.toDate().toString(), // Convert timestamp to string
+            );
+          })
+          .whereType<Meal>()
+          .toList();
+
 
       setState(() {
         _meals = meals;
@@ -95,7 +128,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MealDetailsScreen(meal: meal),
+        builder: (context) => meal_details.MealDetailsScreen(meal: meal),
       ),
     );
   }
@@ -110,7 +143,11 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           IconButton(
             icon: Icon(Icons.history),
             onPressed: () {
-              // TODO: Implement history button functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => history.HistoryScreen()),
+              );
             },
           ),
           IconButton(
@@ -168,8 +205,19 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               },
             ),
             ListTile(
+              title: Text('Chat'),
+              leading: Icon(Icons.chat),
+              onTap: () {
+                // TODO: Implement the chat functionality
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatHistoryScreen()),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('Sign Out'),
               leading: Icon(Icons.logout),
-              title: Text('Logout'),
               onTap: () async {
                 await _firebaseAuth.signOut();
                 Navigator.pop(context);

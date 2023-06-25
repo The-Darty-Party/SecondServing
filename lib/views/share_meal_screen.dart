@@ -1,11 +1,15 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:google_maps_webservice/places.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:secondserving/services/firebase_auth_service.dart';
 
 import '/widgets/image_picker_button.dart';
 import '../widgets/coordinate_button.dart';
@@ -19,6 +23,7 @@ class _DishFormState extends State<DishForm> {
   TextEditingController _dishNameController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
+  final User? user = FirebaseAuth.instance.currentUser;
   GeoPoint? _currentCoordinates;
   File? _pickedImage;
   UploadTask? uploadTask;
@@ -44,7 +49,8 @@ class _DishFormState extends State<DishForm> {
   }
 
   Future<void> _openAddressAutocomplete() async {
-    final apiKey = 'AIzaSyBSE-UAl4xNmb6Fk7y4ey2h6ayyeHQu2kw'; // Replace with your own API key
+    final apiKey =
+        'AIzaSyBSE-UAl4xNmb6Fk7y4ey2h6ayyeHQu2kw'; // Replace with your own API key
 
     Prediction? prediction = await PlacesAutocomplete.show(
       context: context,
@@ -62,50 +68,50 @@ class _DishFormState extends State<DishForm> {
   }
 
   Future<void> _uploadData() async {
-  EasyLoading.show(status: 'Uploading...');
-  final FirebaseStorage storage =
-      FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
+    EasyLoading.show(status: 'Uploading...');
+    final FirebaseStorage storage =
+        FirebaseStorage.instanceFor(bucket: 'secondserving-ef1f1.appspot.com');
 
-  // Generate a unique filename for the uploaded image
-  String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+    // Generate a unique filename for the uploaded image
+    String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-  storageRef = storage.ref().child(fileName);
-  if (_pickedImage != null && storageRef != null) {
-    uploadTask = storageRef!.putFile(_pickedImage!);
+    storageRef = storage.ref().child(fileName);
+    if (_pickedImage != null && storageRef != null) {
+      uploadTask = storageRef!.putFile(_pickedImage!);
+    }
+
+    // Get the download URL of the uploaded image
+    String? photoUrl;
+    if (uploadTask != null) {
+      TaskSnapshot taskSnapshot = await uploadTask!.whenComplete(() {});
+      photoUrl = await taskSnapshot.ref.getDownloadURL();
+    }
+
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String? donorId =
+        user?.uid; // Add donorID field with the current user's ID
+    final String? receiverId = ''; // Initialize receiverID as blank
+
+    final data = {
+      'description': _descriptionController.text,
+      'location': _addressController.text,
+      'coordinates': _currentCoordinates,
+      'name': _dishNameController.text,
+      'photo': photoUrl,
+      'status': 'not booked',
+      'donorID': donorId, // Assign the donorID field
+      'receiverID': receiverId, // Assign the receiverID field
+      'date': DateTime.now(),
+    };
+    await FirebaseFirestore.instance.collection('meals').add(data);
+
+    _dishNameController.clear();
+    _descriptionController.clear();
+    _addressController.clear();
+    _currentCoordinates = GeoPoint(0, 0);
+    EasyLoading.dismiss();
+    Navigator.of(context).pop();
   }
-
-  // Get the download URL of the uploaded image
-  String? photoUrl;
-  if (uploadTask != null) {
-    TaskSnapshot taskSnapshot = await uploadTask!.whenComplete(() {});
-    photoUrl = await taskSnapshot.ref.getDownloadURL();
-  }
-
-  final User? user = FirebaseAuth.instance.currentUser;
-  final String? donorId = user?.uid; // Add donorID field with the current user's ID
-  final String? receiverId = ''; // Initialize receiverID as blank
-
-  final data = {
-    'description': _descriptionController.text,
-    'location': _addressController.text,
-    'coordinates': _currentCoordinates,
-    'name': _dishNameController.text,
-    'photo': photoUrl,
-    'status': 'not booked',
-    'donorID': donorId, // Assign the donorID field
-    'receiverID': receiverId, // Assign the receiverID field
-    'date': DateTime.now(),
-  };
-  await FirebaseFirestore.instance.collection('meals').add(data);
-
-  _dishNameController.clear();
-  _descriptionController.clear();
-  _addressController.clear();
-  _currentCoordinates = GeoPoint(0, 0);
-  EasyLoading.dismiss();
-  Navigator.of(context).pop();
-}
-
 
   @override
   void dispose() {
