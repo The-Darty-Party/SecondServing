@@ -3,7 +3,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:secondserving/views/login_screen.dart';
+import 'package:secondserving/views/adminLogin.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
