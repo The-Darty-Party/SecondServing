@@ -3,21 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
+import '../models/meal_model.dart';
+import 'chat_history_screen.dart';
 import 'profile_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class Meal {
-  final String name;
-  final String description;
-  final String location;
-  final String photo;
+import 'meal_details.dart' as meal_details;
+import 'history.dart' as history;
 
-  Meal({
-    required this.name,
-    required this.description,
-    required this.location,
-    required this.photo,
-  });
-}
+import 'messages_screen.dart';
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
@@ -26,10 +20,118 @@ class FoodReceiverScreen extends StatefulWidget {
   _FoodReceiverScreenState createState() => _FoodReceiverScreenState();
 }
 
+class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('History'),
+        backgroundColor: Colors.green,
+      ),
+      body: Center(
+        child: Text('This is the history page.'),
+      ),
+    );
+  }
+}
+
 class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final CollectionReference usersCollection =
-      FirebaseFirestore.instance.collection('users');
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  String _userName = '';
+  List<Meal> _meals = [];
+  bool _sortMealsByNewest = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserName();
+    _fetchMeals();
+  }
+
+
+  Future<void> _fetchUserName() async {
+    User? currentUser = _firebaseAuth.currentUser;
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await _firestore.collection('users').doc(currentUser!.uid).get();
+
+      if (snapshot.exists) {
+        setState(() {
+          _userName = snapshot['name'] ?? '';
+        });
+      }
+    } catch (e) {
+      print('Error fetching user name: $e');
+    }
+  }
+
+  Future<void> _fetchMeals() async {
+    try {
+      final String userId = _firebaseAuth.currentUser?.uid ?? '';
+      Query<Map<String, dynamic>> mealsQuery =
+          FirebaseFirestore.instance.collection('meals');
+
+
+      if (_sortMealsByNewest) {
+        mealsQuery = mealsQuery.orderBy('date', descending: true);
+      }
+
+      final QuerySnapshot<Map<String, dynamic>> snapshot =
+          await mealsQuery.get();
+
+      final List<Meal> meals = snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            final String mealStatus = data['status'] ?? '';
+            final String mealDonorID = data['donorID'] ?? '';
+            final String mealReceiverID = data['receiverID'] ?? '';
+
+            if (mealStatus == 'booked' &&
+                mealDonorID != userId &&
+                mealReceiverID != userId) {
+              return null; // Skip this meal if it's booked and not assigned to the user
+            }
+
+            final Timestamp timestamp =
+                data['date'] ?? Timestamp.now(); // Get the timestamp
+
+            return Meal(
+              mealId: doc.id,
+              donorId: data['donorID'] ?? '',
+              name: data['name'] ?? '',
+              description: data['description'] ?? '',
+              location: data['location'] ?? '',
+              photo: data['photo'] ?? '',
+              status: mealStatus,
+              date:
+                  timestamp.toDate().toString(), // Convert timestamp to string
+            );
+          })
+          .whereType<Meal>()
+          .toList();
+
+
+      setState(() {
+        _meals = meals;
+      });
+    } catch (e) {
+      print('Error fetching meals: $e');
+    }
+  }
+
+  void _navigateToMealDetails(Meal meal) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => meal_details.MealDetailsScreen(meal: meal),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +143,20 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           IconButton(
             icon: Icon(Icons.history),
             onPressed: () {
-              // TODO: Implement history button functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => history.HistoryScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              setState(() {
+                _sortMealsByNewest = !_sortMealsByNewest;
+                _fetchMeals();
+              });
             },
           ),
         ],
@@ -67,27 +182,19 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Username: ${user?.displayName ?? "N/A"}',
+                    _userName,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Email: ${user?.email ?? "N/A"}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
+                       fontSize: 20, 
+                       fontWeight: FontWeight.bold, 
                     ),
                   ),
                 ],
               ),
             ),
             ListTile(
-              title: Text('Profile'),
               leading: Icon(Icons.person),
+              title: Text('Profile'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -102,88 +209,76 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               leading: Icon(Icons.chat),
               onTap: () {
                 // TODO: Implement the chat functionality
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatHistoryScreen()),
+                );
               },
             ),
             ListTile(
               title: Text('Sign Out'),
               leading: Icon(Icons.logout),
-              onTap: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.popUntil(context, (route) => route.isFirst);
+              onTap: () async {
+                await _firebaseAuth.signOut();
+                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('meals').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          final List<Meal> meals = snapshot.data!.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return Meal(
-              name: data['name'] ?? '',
-              description: data['description'] ?? '',
-              location: data['location'] ?? '',
-              photo: data['photo'] ?? '',
-            );
-          }).toList();
-
-          return ListView.builder(
-            itemCount: meals.length,
-            itemBuilder: (context, index) {
-              final meal = meals[index];
-              return Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
-                  leading: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        meal.photo,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    meal.name,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 8),
-                      Text(
-                        'Location: ${meal.location}',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        meal.description,
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ],
+      body: ListView.builder(
+        itemCount: _meals.length,
+        itemBuilder: (context, index) {
+          final meal = _meals[index];
+          return Card(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListTile(
+              contentPadding: EdgeInsets.all(16),
+              leading: SizedBox(
+                width: 80,
+                height: 80,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    meal.photo,
+                    fit: BoxFit.cover,
                   ),
                 ),
-              );
-            },
+              ),
+              title: Text(
+                meal.name,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 8),
+                  Text(
+                    'Location: ${meal.location}',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Description: ${meal.description}',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Status: ${meal.status}',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+              onTap: () {
+                _navigateToMealDetails(meal);
+              },
+            ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Implement plus button functionality
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => DishForm()),
@@ -194,10 +289,4 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(const MaterialApp(
-    home: FoodReceiverScreen(),
-  ));
 }

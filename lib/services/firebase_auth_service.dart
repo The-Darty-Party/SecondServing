@@ -1,16 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
   String? _verificationId; // Stores the verification ID
 
   // Send OTP message for phone number verification
   Future<void> sendOtpMessage(String phoneNumber) async {
-    final PhoneVerificationCompleted verificationCompleted = (PhoneAuthCredential credential) async {
+    final PhoneVerificationCompleted verificationCompleted =
+        (PhoneAuthCredential credential) async {
       await _firebaseAuth.signInWithCredential(credential);
     };
 
-    final PhoneVerificationFailed verificationFailed = (FirebaseAuthException e) {
+    final PhoneVerificationFailed verificationFailed =
+        (FirebaseAuthException e) {
       print('Verification failed: ${e.message}');
     };
 
@@ -18,7 +22,8 @@ class FirebaseAuthService {
       _verificationId = verificationId; // Store the verification ID
     };
 
-    final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout = (String verificationId) {
+    final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
+        (String verificationId) {
       print('Code auto retrieval timeout. Verification ID: $verificationId');
     };
 
@@ -43,9 +48,11 @@ class FirebaseAuthService {
   }
 
   // Sign in with email and password
-  Future<String?> signInWithEmailAndPassword(String email, String password) async {
+  Future<String?> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
-      final UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+      final UserCredential userCredential =
+          await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -63,9 +70,11 @@ class FirebaseAuthService {
   }
 
   // Register with email and password
-  Future<String?> registerWithEmailAndPassword(String email, String password) async {
+  Future<String?> registerWithEmailAndPassword(
+      String email, String password) async {
     try {
-      final UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+      final UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -83,6 +92,26 @@ class FirebaseAuthService {
     } catch (e) {
       return "An error occurred while trying to sign up.";
     }
+  }
+
+  Future<String> getThisUserName() async {
+    User? user = _firebaseAuth.currentUser;
+    if (user != null) {
+      String uid = user.uid;
+      DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
+      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+      return data?['name'];
+    }
+    return '';
+  }
+
+  Future<String> getUserName(String? uid) async {
+    if (uid != null) {
+      DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
+      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+      return data?['name'];
+    }
+    return '';
   }
 
   // Sign out

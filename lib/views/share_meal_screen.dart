@@ -1,12 +1,18 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:google_maps_webservice/places.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:secondserving/services/firebase_auth_service.dart';
 
 import '/widgets/image_picker_button.dart';
 import '../widgets/coordinate_button.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class DishForm extends StatefulWidget {
   @override
@@ -17,6 +23,7 @@ class _DishFormState extends State<DishForm> {
   TextEditingController _dishNameController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
+  final User? user = FirebaseAuth.instance.currentUser;
   GeoPoint? _currentCoordinates;
   File? _pickedImage;
   UploadTask? uploadTask;
@@ -41,6 +48,25 @@ class _DishFormState extends State<DishForm> {
     });
   }
 
+  Future<void> _openAddressAutocomplete() async {
+    final apiKey =
+        'AIzaSyBSE-UAl4xNmb6Fk7y4ey2h6ayyeHQu2kw'; // Replace with your own API key
+
+    Prediction? prediction = await PlacesAutocomplete.show(
+      context: context,
+      apiKey: apiKey,
+      mode: Mode.overlay,
+      language: 'en',
+      components: [Component(Component.country, 'my')],
+    );
+
+    if (prediction != null && prediction.description != null) {
+      setState(() {
+        _addressController.text = prediction.description!;
+      });
+    }
+  }
+
   Future<void> _uploadData() async {
     EasyLoading.show(status: 'Uploading...');
     final FirebaseStorage storage =
@@ -61,12 +87,21 @@ class _DishFormState extends State<DishForm> {
       photoUrl = await taskSnapshot.ref.getDownloadURL();
     }
 
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String? donorId =
+        user?.uid; // Add donorID field with the current user's ID
+    final String? receiverId = ''; // Initialize receiverID as blank
+
     final data = {
       'description': _descriptionController.text,
       'location': _addressController.text,
       'coordinates': _currentCoordinates,
       'name': _dishNameController.text,
       'photo': photoUrl,
+      'status': 'not booked',
+      'donorID': donorId, // Assign the donorID field
+      'receiverID': receiverId, // Assign the receiverID field
+      'date': DateTime.now(),
     };
     await FirebaseFirestore.instance.collection('meals').add(data);
 
@@ -93,7 +128,6 @@ class _DishFormState extends State<DishForm> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Share your meal'),
-        backgroundColor: Colors.green[700],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -120,7 +154,7 @@ class _DishFormState extends State<DishForm> {
               TextField(
                 controller: _addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Address/Location',
+                  labelText: 'Location',
                 ),
               ),
               const SizedBox(height: 16.0),
@@ -132,16 +166,13 @@ class _DishFormState extends State<DishForm> {
               CoordinateButton(onCoordinatesChanged: _updateCoordinates),
               const SizedBox(height: 16.0),
               ElevatedButton(
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.green)),
                 onPressed: () {
                   // Perform form submission actions here
                   _uploadData();
                   // Clear the form fields
 
                   // Show a snackbar or navigate to a new screen to indicate successful submission
-                  SnackBar snackBar = const SnackBar(
+                  SnackBar snackBar = SnackBar(
                     content: Text('Your meal has been shared!'),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
