@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/meal_model.dart';
+import 'food_shared_screen.dart';
 import 'messages_screen.dart';
 
 class MealDetailsScreen extends StatefulWidget {

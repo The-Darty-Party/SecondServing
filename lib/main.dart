@@ -19,6 +19,12 @@ void main() async {
       debugShowCheckedModeBanner: false,
       home: LoginScreen(),
       builder: EasyLoading.init(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => LoginScreen(),
+
+        // ... other routes for your app
+      },
     ),
   );
 }

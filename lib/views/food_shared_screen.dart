@@ -52,7 +52,6 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
     _fetchMeals();
   }
 
-
   Future<void> _fetchUserName() async {
     User? currentUser = _firebaseAuth.currentUser;
 
@@ -75,7 +74,6 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
       final String userId = _firebaseAuth.currentUser?.uid ?? '';
       Query<Map<String, dynamic>> mealsQuery =
           FirebaseFirestore.instance.collection('meals');
-
 
       if (_sortMealsByNewest) {
         mealsQuery = mealsQuery.orderBy('date', descending: true);
@@ -114,7 +112,6 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           })
           .whereType<Meal>()
           .toList();
-
 
       setState(() {
         _meals = meals;
@@ -185,8 +182,8 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                     _userName,
                     style: TextStyle(
                       color: Colors.white,
-                       fontSize: 20, 
-                       fontWeight: FontWeight.bold, 
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
