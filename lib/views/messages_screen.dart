@@ -21,15 +21,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final message = _textController.text.trim();
 
     if (message.isNotEmpty) {
-      final querySnapshot = await widget.chatsCollection
-          .where('participants', arrayContains: widget.receiverUID)
-          .get();
+      final querySnapshot =
+          await widget.chatsCollection.where('chatId', arrayContainsAny: [
+        '${widget.user!.uid}${widget.receiverUID}',
+        '${widget.receiverUID}${widget.user!.uid}'
+      ]).get();
       final docId = querySnapshot.docs.first.id;
 
       final senderNameSnapshot =
           await widget.usersCollection.doc(widget.user!.uid).get();
       final senderName = senderNameSnapshot.data()!['name'] ?? '';
-
+      await widget.chatsCollection.doc(docId).update({
+        'lastMessage': message,
+      }).catchError((error) {
+        print('Error updating chat collection field lastMessage: $error');
+      });
       await widget.chatsCollection.doc(docId).collection('messages').add({
         'sender': senderName,
         'text': message,
@@ -53,9 +59,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: widget.chatsCollection
-                  .where('participants', arrayContainsAny: [
-                widget.receiverUID,
+              stream: widget.chatsCollection.where('chatId', arrayContainsAny: [
+                '${widget.user!.uid}${widget.receiverUID}',
+                '${widget.receiverUID}${widget.user!.uid}'
               ]).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
