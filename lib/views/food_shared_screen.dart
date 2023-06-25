@@ -38,24 +38,44 @@ class HistoryScreen extends StatelessWidget {
 }
 
 class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final CollectionReference usersCollection =
-      FirebaseFirestore.instance.collection('users');
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  String _userName = '';
   List<Meal> _meals = [];
   bool _sortMealsByNewest = false;
 
   @override
   void initState() {
     super.initState();
+    _fetchUserName();
     _fetchMeals();
+  }
+
+
+  Future<void> _fetchUserName() async {
+    User? currentUser = _firebaseAuth.currentUser;
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await _firestore.collection('users').doc(currentUser!.uid).get();
+
+      if (snapshot.exists) {
+        setState(() {
+          _userName = snapshot['name'] ?? '';
+        });
+      }
+    } catch (e) {
+      print('Error fetching user name: $e');
+    }
   }
 
   Future<void> _fetchMeals() async {
     try {
-      final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final String userId = _firebaseAuth.currentUser?.uid ?? '';
       Query<Map<String, dynamic>> mealsQuery =
           FirebaseFirestore.instance.collection('meals');
+
 
       if (_sortMealsByNewest) {
         mealsQuery = mealsQuery.orderBy('date', descending: true);
@@ -63,6 +83,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
 
       final QuerySnapshot<Map<String, dynamic>> snapshot =
           await mealsQuery.get();
+
       final List<Meal> meals = snapshot.docs
           .map((doc) {
             final data = doc.data();
@@ -93,6 +114,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           })
           .whereType<Meal>()
           .toList();
+
 
       setState(() {
         _meals = meals;
@@ -160,10 +182,11 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    user?.email ?? '',
+                    _userName,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                       fontSize: 20, 
+                       fontWeight: FontWeight.bold, 
                     ),
                   ),
                 ],
@@ -196,7 +219,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               title: Text('Sign Out'),
               leading: Icon(Icons.logout),
               onTap: () async {
-                await FirebaseAuth.instance.signOut();
+                await _firebaseAuth.signOut();
                 Navigator.pop(context);
                 Navigator.pushReplacementNamed(context, '/login');
               },

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 
 class ProfileScreen extends StatelessWidget {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -10,7 +8,6 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     User? currentUser = _firebaseAuth.currentUser;
 
     return FutureBuilder<DocumentSnapshot>(
@@ -36,6 +33,7 @@ class ProfileScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: Text('Profile'),
+            backgroundColor: Colors.green,
           ),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -54,12 +52,19 @@ class ProfileScreen extends StatelessWidget {
                 SizedBox(height: 20),
                 Text(
                   'Username: $username',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
                 SizedBox(height: 10),
                 Text(
                   'Email: $email',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black,
+                  ),
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
@@ -67,15 +72,22 @@ class ProfileScreen extends StatelessWidget {
                     _firebaseAuth.signOut();
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
-                  child: Text('Sign Out'),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.red, // Set button color to red
+                  ),
+                  child: Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
-
             ),
           ),
         );
       },
-
     );
   }
 }

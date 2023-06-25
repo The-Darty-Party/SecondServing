@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/meal_model.dart';
 import 'messages_screen.dart';
+
 
 class MealDetailsScreen extends StatefulWidget {
   final Meal meal;
@@ -35,6 +37,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   void _uploadData(String mealId) async {
     try {
       final DocumentSnapshot<Map<String, dynamic>> mealDoc =
+
           await FirebaseFirestore.instance
               .collection('meals')
               .doc(mealId)
@@ -119,11 +122,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.meal.name),
+        backgroundColor: Colors.green,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -139,19 +144,29 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Name:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                      'Name:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _navigateToReportScreen,
+                      child: Text('Report'),
+                      style: ElevatedButton.styleFrom(primary: Colors.green),
+                    ),
+                  ],
                 ),
+                     Text(
+                        widget.meal.name,
+                        style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                      ),
                 SizedBox(height: 8),
-                Text(
-                  widget.meal.name,
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 16),
                 Text(
                   'Description:',
                   style: TextStyle(
@@ -194,6 +209,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+
                     if (widget.meal.donorId != widget.user!.uid)
                       ElevatedButton(
                         onPressed: () {
@@ -203,12 +219,15 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         },
                         child: Text('Chat'),
                       ),
+
                     ElevatedButton(
                       onPressed: () {
                         _launchGoogleMaps(widget.meal.location);
                       },
                       child: Text('Google Map'),
+                      style: ElevatedButton.styleFrom(primary: Colors.green),
                     ),
+
                     if (widget.meal.donorId != widget.user!.uid)
                       ElevatedButton(
                         onPressed: () {
@@ -216,6 +235,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         },
                         child: Text('Book'),
                       ),
+
                   ],
                 ),
               ],
