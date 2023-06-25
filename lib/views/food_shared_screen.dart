@@ -7,7 +7,12 @@ import '../models/meal_model.dart';
 import 'chat_history_screen.dart';
 import 'profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'meal_details.dart' as meal_details;
+import 'history.dart' as history;
+
 import 'messages_screen.dart';
+
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
@@ -16,12 +21,30 @@ class FoodReceiverScreen extends StatefulWidget {
   _FoodReceiverScreenState createState() => _FoodReceiverScreenState();
 }
 
+class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('History'),
+        backgroundColor: Colors.green,
+      ),
+      body: Center(
+        child: Text('This is the history page.'),
+      ),
+    );
+  }
+}
+
 class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   final CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
 
-  List<Meal> _meals = [];
+  List<meal_details.Meal> _meals = [];
+  bool _sortMealsByNewest = false;
 
   @override
   void initState() {
@@ -31,20 +54,41 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
 
   Future<void> _fetchMeals() async {
     try {
+      final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      Query<Map<String, dynamic>> mealsQuery =
+          FirebaseFirestore.instance.collection('meals');
+
+      if (_sortMealsByNewest) {
+        mealsQuery = mealsQuery.orderBy('date', descending: true);
+      }
+
       final QuerySnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance.collection('meals').get();
-      final List<Meal> meals = snapshot.docs.map((doc) {
+          await mealsQuery.get();
+      final List<meal_details.Meal> meals = snapshot.docs.map((doc) {
         final data = doc.data();
-        return Meal(
+        final String mealStatus = data['status'] ?? '';
+        final String mealDonorID = data['donorID'] ?? '';
+        final String mealReceiverID = data['receiverID'] ?? '';
+
+        if (mealStatus == 'booked' &&
+            mealDonorID != userId &&
+            mealReceiverID != userId) {
+          return null; // Skip this meal if it's booked and not assigned to the user
+        }
+
+        final Timestamp timestamp = data['date'] ?? Timestamp.now(); // Get the timestamp
+
+        return meal_details.Meal(
           mealId: doc.id,
           donorId: data['donorID'] ?? '',
           name: data['name'] ?? '',
           description: data['description'] ?? '',
           location: data['location'] ?? '',
           photo: data['photo'] ?? '',
-          status: data['status'] ?? '',
+          status: mealStatus,
+          date: timestamp.toDate().toString(), // Convert timestamp to string
         );
-      }).toList();
+      }).whereType<meal_details.Meal>().toList();
 
       setState(() {
         _meals = meals;
@@ -54,11 +98,11 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
     }
   }
 
-  void _navigateToMealDetails(Meal meal) {
+  void _navigateToMealDetails(meal_details.Meal meal) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MealDetailsScreen(meal: meal),
+        builder: (context) => meal_details.MealDetailsScreen(meal: meal),
       ),
     );
   }
@@ -73,7 +117,19 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           IconButton(
             icon: Icon(Icons.history),
             onPressed: () {
-              // TODO: Implement history button functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => history.HistoryScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              setState(() {
+                _sortMealsByNewest = !_sortMealsByNewest;
+                _fetchMeals();
+              });
             },
           ),
         ],
@@ -99,27 +155,18 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Username: ${user?.displayName ?? "N/A"}',
+                    user?.email ?? '',
                     style: TextStyle(
+                      color: Colors.white,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Email: ${user?.email ?? "N/A"}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
             ListTile(
-              title: Text('Profile'),
               leading: Icon(Icons.person),
+              title: Text('Profile'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -130,6 +177,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               },
             ),
             ListTile(
+
               title: Text('Chat'),
               leading: Icon(Icons.chat),
               onTap: () {
@@ -142,10 +190,13 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
             ),
             ListTile(
               title: Text('Sign Out'),
+
               leading: Icon(Icons.logout),
-              onTap: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.popUntil(context, (route) => route.isFirst);
+              title: Text('Logout'),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],
@@ -184,7 +235,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'description: ${meal.description}',
+                    'Description: ${meal.description}',
                     style: TextStyle(fontSize: 14),
                   ),
                   SizedBox(height: 4),
@@ -432,3 +483,4 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 }
+
