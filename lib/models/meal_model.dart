@@ -15,5 +15,6 @@ class Meal {
     required this.location,
     required this.photo,
     required this.status,
+    required String date,
   });
 }
