@@ -23,14 +23,14 @@ class _LoginScreenState extends State<LoginScreen> {
     String password = _passwordController.text;
     EasyLoading.show(status: 'Authenticating...');
     if (username.isNotEmpty && password.isNotEmpty) {
-
-      String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
+      String? result =
+          await firebaseAuth.signInWithEmailAndPassword(username, password);
 
       if (result == 'Logged in successfully!') {
         EasyLoading.dismiss();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ReportedUsersScreen()),
+          MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
         );
       } else {
         EasyLoading.dismiss();
@@ -38,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
-
       EasyLoading.dismiss();
       final snackBar =
           SnackBar(content: Text('Please enter username and password'));
@@ -61,7 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
           .sendPasswordResetEmail(email: username)
           .then((value) {
         final snackBar = SnackBar(
-          content: Text('Password reset email sent. Please check your email inbox.'),
+          content:
+              Text('Password reset email sent. Please check your email inbox.'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }).catchError((error) {
