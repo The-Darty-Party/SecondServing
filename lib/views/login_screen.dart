@@ -4,8 +4,8 @@ import 'package:secondserving/views/register_screen.dart';
 import 'package:secondserving/services/firebase_auth_service.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:secondserving/views/share_meal_screen.dart';
-
 import 'food_shared_screen.dart';
+import 'reportedUsers.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -23,14 +23,14 @@ class _LoginScreenState extends State<LoginScreen> {
     String password = _passwordController.text;
     EasyLoading.show(status: 'Authenticating...');
     if (username.isNotEmpty && password.isNotEmpty) {
-      String? result =
-          await firebaseAuth.signInWithEmailAndPassword(username, password);
+
+      String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
 
       if (result == 'Logged in successfully!') {
         EasyLoading.dismiss();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
+          MaterialPageRoute(builder: (context) => ReportedUsersScreen()),
         );
       } else {
         EasyLoading.dismiss();
@@ -38,15 +38,16 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
+
       EasyLoading.dismiss();
       final snackBar =
           SnackBar(content: Text('Please enter username and password'));
+
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
   void _navigateToRegisterScreen(BuildContext context) {
-    // Navigate to the RegisterScreen
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => RegisterScreen()),
@@ -60,8 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .sendPasswordResetEmail(email: username)
           .then((value) {
         final snackBar = SnackBar(
-          content:
-              Text('Password reset email sent. Please check your email inbox.'),
+          content: Text('Password reset email sent. Please check your email inbox.'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }).catchError((error) {
