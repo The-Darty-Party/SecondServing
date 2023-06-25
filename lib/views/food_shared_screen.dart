@@ -43,7 +43,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
 
   String _userName = '';
   List<Meal> _meals = [];
-  /*bool _sortMealsByNewest = false;*/
+  
 
   @override
   void initState() {
@@ -147,15 +147,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               );
             },
           ),
-          /*IconButton(
-            icon: Icon(Icons.filter_list),
-            onPressed: () {
-              setState(() {
-                _sortMealsByNewest = !_sortMealsByNewest;
-                _fetchMeals();
-              });
-            },
-          ),*/
+          
         ],
       ),
       drawer: Drawer(
