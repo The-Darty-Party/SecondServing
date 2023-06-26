@@ -136,8 +136,9 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.meal.name),
-        backgroundColor: Colors.green,
+        iconTheme: IconThemeData(color: Colors.black),
+        title: Text(widget.meal.name, style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,11 +165,11 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         ),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: _navigateToReportScreen,
-                      child: Text('Report'),
-                      style: ElevatedButton.styleFrom(primary: Colors.green),
-                    ),
+                    TextButton(
+                        onPressed: _navigateToReportScreen,
+                        style: ButtonStyle(),
+                        child:
+                            Text('Report', style: TextStyle(color: Colors.red)))
                   ],
                 ),
                 Text(
@@ -216,7 +217,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                 ),
                 SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (widget.meal.donorId != widget.user!.uid)
                       ElevatedButton(
@@ -225,24 +226,39 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
 
                           _getCurrentChat();
                         },
-                        child: Text('Chat'),
+                        child:
+                            Text('Chat', style: TextStyle(color: Colors.black)),
+                        style: ElevatedButton.styleFrom(primary: Colors.white),
                       ),
                     ElevatedButton(
                       onPressed: () {
                         _launchGoogleMaps(widget.meal.location);
                       },
-                      child: Text('Google Map'),
-                      style: ElevatedButton.styleFrom(primary: Colors.green),
+                      child: Column(
+                          children: [Icon(Icons.map), Text('Google Map')]),
+                      style:
+                          ElevatedButton.styleFrom(primary: Color(0xffbcdfa6)),
                     ),
-                    if (widget.meal.donorId != widget.user!.uid)
-                      ElevatedButton(
-                        onPressed: () {
-                          _uploadData(widget.meal.mealId);
-                        },
-                        child: Text('Book'),
-                      ),
                   ],
                 ),
+                SizedBox(
+                  height: 10,
+                ),
+                if (widget.meal.donorId != widget.user!.uid)
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _uploadData(widget.meal.mealId);
+                      },
+                      child: Text('Book'),
+                      style: ButtonStyle(
+                        minimumSize: MaterialStateProperty.all<Size>(
+                            Size(200, 35.0)), // Set the button width
+                        backgroundColor: MaterialStateProperty.all<Color>(Color(
+                            0xff14c81cb)), // Set the button background color
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

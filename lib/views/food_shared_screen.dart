@@ -28,7 +28,7 @@ class HistoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('History'),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color.fromARGB(255, 218, 210, 210),
       ),
       body: Center(
         child: Text('This is the history page.'),
@@ -134,11 +134,13 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Find Food Nearby'),
-        backgroundColor: Colors.green,
+        iconTheme: IconThemeData(color: Colors.grey),
+        title: const Text('Find Food Nearby',
+            style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(Icons.history),
+            icon: Icon(Icons.history, color: Colors.grey),
             onPressed: () {
               Navigator.push(
                 context,
@@ -148,7 +150,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.filter_list),
+            icon: Icon(Icons.filter_list, color: Colors.grey),
             onPressed: () {
               setState(() {
                 _sortMealsByNewest = !_sortMealsByNewest;
@@ -164,25 +166,24 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
             DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.green,
+                image: DecorationImage(
+                    image: AssetImage('assets/drawerbg.png'),
+                    fit: BoxFit.cover),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.account_circle,
-                      size: 60,
-                      color: Colors.green,
-                    ),
+                    backgroundColor: Colors.black,
+                    backgroundImage: AssetImage('assets/AbdullAvatar.png'),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 5),
                   Text(
-                    _userName,
+                    "username: $_userName",
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+                      color: Colors.grey,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -282,7 +283,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           );
         },
         child: Icon(Icons.add),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xff14c81cb),
       ),
     );
   }
