@@ -1,4 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:secondserving/views/register_screen.dart';
 import 'package:secondserving/services/firebase_auth_service.dart';
@@ -19,32 +21,55 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   void _login(BuildContext context) async {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
-    EasyLoading.show(status: 'Authenticating...');
-    if (username.isNotEmpty && password.isNotEmpty) {
-      String? result =
-          await firebaseAuth.signInWithEmailAndPassword(username, password);
+  String username = _usernameController.text;
+  String password = _passwordController.text;
+  EasyLoading.show(status: 'Authenticating...');
+  
+  if (username.isNotEmpty && password.isNotEmpty) {
+    String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
 
-      if (result == 'Logged in successfully!') {
-        EasyLoading.dismiss();
+    if (result == 'Logged in successfully!') {
+      EasyLoading.dismiss();
+
+      // Check if the logged-in user's email is in the admin collection
+      bool isAdmin = await isAdminEmail(username);
+      
+      if (isAdmin) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ReportedUsersScreen()),
+        );
+      } else {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
         );
-      } else {
-        EasyLoading.dismiss();
-        final snackBar = SnackBar(content: Text(result!));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
       EasyLoading.dismiss();
-      final snackBar =
-          SnackBar(content: Text('Please enter username and password'));
-
+      final snackBar = SnackBar(content: Text(result!));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
+  } else {
+    EasyLoading.dismiss();
+    final snackBar = SnackBar(content: Text('Please enter username and password'));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
+}
+
+Future<bool> isAdminEmail(String email) async {
+  try {
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+        .collection('admin')
+        .where('email', isEqualTo: email)
+        .get();
+
+    return snapshot.size > 0; // If the snapshot has documents, the email is an admin email
+  } catch (e) {
+    print('Error checking admin email: $e');
+    return false;
+  }
+}
 
   void _navigateToRegisterScreen(BuildContext context) {
     Navigator.push(
