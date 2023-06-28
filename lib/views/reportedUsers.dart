@@ -88,8 +88,12 @@ class _ReportedUsersScreenState extends State<ReportedUsersScreen> {
         itemBuilder: (context, index) {
           final user = _reportedUsers[index];
           return ListTile(
-            title: Text(user.name), // Display the user's name
-            subtitle: Text(user.email), // Display the user's email
+            title: Text(user.name,
+                style:
+                    TextStyle(color: Colors.black)), // Display the user's name
+            subtitle: Text(user.email,
+                style:
+                    TextStyle(color: Colors.black)), // Display the user's email
             onTap: () {
               Navigator.push(
                 context,
