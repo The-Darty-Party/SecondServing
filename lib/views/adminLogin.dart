@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:secondserving/views/register_screen.dart';
 import 'package:secondserving/services/firebase_auth_service.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -21,55 +20,38 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   void _login(BuildContext context) async {
-  String username = _usernameController.text;
-  String password = _passwordController.text;
-  EasyLoading.show(status: 'Authenticating...');
-  
-  if (username.isNotEmpty && password.isNotEmpty) {
-    String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
+    String username = _usernameController.text;
+    String password = _passwordController.text;
 
-    if (result == 'Logged in successfully!') {
-      EasyLoading.dismiss();
-
-      // Check if the logged-in user's email is in the admin collection
-      bool isAdmin = await isAdminEmail(username);
-      
+    if (username.isNotEmpty && password.isNotEmpty) {
+      bool isAdmin = await _checkAdminEmail(username);
       if (isAdmin) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ReportedUsersScreen()),
-        );
+        String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
+        if (result == 'Logged in successfully!') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ReportedUsersScreen()),
+          );
+        } else {
+          final snackBar = SnackBar(content: Text(result!));
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
       } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
-        );
+        final snackBar = SnackBar(content: Text('You are not an administrator.'));
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
-      EasyLoading.dismiss();
-      final snackBar = SnackBar(content: Text(result!));
+      final snackBar = SnackBar(content: Text('Please enter username and password'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
-  } else {
-    EasyLoading.dismiss();
-    final snackBar = SnackBar(content: Text('Please enter username and password'));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
-}
 
-Future<bool> isAdminEmail(String email) async {
-  try {
-    final QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
-        .collection('admin')
-        .where('email', isEqualTo: email)
-        .get();
+  Future<bool> _checkAdminEmail(String email) async {
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await FirebaseFirestore.instance.collection('admin').where('email', isEqualTo: email).get();
 
-    return snapshot.size > 0; // If the snapshot has documents, the email is an admin email
-  } catch (e) {
-    print('Error checking admin email: $e');
-    return false;
+    return snapshot.docs.isNotEmpty;
   }
-}
 
   void _navigateToRegisterScreen(BuildContext context) {
     Navigator.push(
@@ -85,8 +67,7 @@ Future<bool> isAdminEmail(String email) async {
           .sendPasswordResetEmail(email: username)
           .then((value) {
         final snackBar = SnackBar(
-          content:
-              Text('Password reset email sent. Please check your email inbox.'),
+          content: Text('Password reset email sent. Please check your email inbox.'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }).catchError((error) {
@@ -113,7 +94,7 @@ Future<bool> isAdminEmail(String email) async {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Second Serving',
+                'Administrator Login',
                 style: TextStyle(
                   fontSize: 35,
                   fontWeight: FontWeight.bold,
