@@ -35,7 +35,8 @@ class _ReportedUsersScreenState extends State<ReportedUsersScreen> {
       final QuerySnapshot<Map<String, dynamic>> snapshot =
           await FirebaseFirestore.instance.collection('reports').get();
 
-      final List<ReportedUser> users = await Future.wait(snapshot.docs.map((doc) async {
+      final List<ReportedUser> users =
+          await Future.wait(snapshot.docs.map((doc) async {
         final data = doc.data();
         final donorId = data['donorID'] ?? '';
 
@@ -49,7 +50,8 @@ class _ReportedUsersScreenState extends State<ReportedUsersScreen> {
         final name = userData?['name'] ?? '';
         final phone = userData?['phone'] ?? '';
 
-        print('Fetched user: donorId=$donorId, name=$name, email=$email, phone=$phone');
+        print(
+            'Fetched user: donorId=$donorId, name=$name, email=$email, phone=$phone');
 
         return ReportedUser(
           donorId: donorId,
@@ -71,8 +73,15 @@ class _ReportedUsersScreenState extends State<ReportedUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reported Users'),
-        backgroundColor: Colors.green,
+        centerTitle: true,
+        leadingWidth: 100,
+        leading: TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Sign Out', style: TextStyle(color: Colors.red))),
+        title: Text('Reported Users', style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
       ),
       body: ListView.builder(
         itemCount: _reportedUsers.length,
@@ -85,7 +94,8 @@ class _ReportedUsersScreenState extends State<ReportedUsersScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ReportDetailsScreen(donorId: user.donorId),
+                  builder: (context) =>
+                      ReportDetailsScreen(donorId: user.donorId),
                 ),
               );
             },

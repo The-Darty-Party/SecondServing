@@ -4,7 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ReportDetailsScreen extends StatefulWidget {
   final String donorId;
 
-  const ReportDetailsScreen({Key? key, required this.donorId}) : super(key: key);
+  const ReportDetailsScreen({Key? key, required this.donorId})
+      : super(key: key);
 
   @override
   _ReportDetailsScreenState createState() => _ReportDetailsScreenState();
@@ -24,9 +25,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   Future<void> _fetchReportDetails() async {
     try {
       final QuerySnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance.collection('reports').where('donorID', isEqualTo: widget.donorId).get();
+          await FirebaseFirestore.instance
+              .collection('reports')
+              .where('donorID', isEqualTo: widget.donorId)
+              .get();
 
-      final List<Map<String, dynamic>> reports = snapshot.docs.map((doc) => doc.data()).toList();
+      final List<Map<String, dynamic>> reports =
+          snapshot.docs.map((doc) => doc.data()).toList();
 
       if (reports.isNotEmpty) {
         final report = reports[0];
@@ -51,8 +56,12 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Report Details'),
-        backgroundColor: Colors.green,
+        leading: BackButton(color: Colors.black),
+        title: Text(
+          'Report Details',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
