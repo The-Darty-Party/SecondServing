@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -38,11 +39,70 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         setState(() {
           _issue = report['issue'] ?? '';
           _description = report['description'] ?? '';
-          _reporter = report['reporterID'] ?? '';
+        });
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(report['reporterID'])
+            .get()
+            .then((doc) {
+          setState(() {
+            _reporter = doc.data()!['name'];
+          });
         });
       }
     } catch (e) {
       print('Error fetching report details: $e');
+    }
+  }
+
+  // Function to block the donor
+  Future<void> _blockDonor() async {
+    try {
+      // Create a new document in the 'blocked' collection
+      await FirebaseFirestore.instance.collection('blocked').add({
+        'donorId': widget.donorId,
+        'blocked': true,
+      });
+
+      // Show a success message or perform any other necessary actions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User blocked successfully')),
+      );
+
+      // Nevigate back to previous screen
+      Navigator.of(context).pop();
+    } catch (e) {
+      print('Error blocking donor: $e');
+      // Show an error message or perform error handling
+    }
+  }
+
+  // Function to delete the report
+  Future<void> _deleteReport() async {
+    try {
+      // Delete the report document
+      await FirebaseFirestore.instance
+          .collection('reports')
+          .where('donorID', isEqualTo: widget.donorId)
+          .get()
+          .then((snapshot) {
+        snapshot.docs.forEach((doc) {
+          doc.reference.delete();
+        });
+      });
+
+      // Show a success message or perform any other necessary actions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Report deleted successfully')),
+      );
+
+      // Nevigate back to previous screen
+      Navigator.of(context).pop();
+
+      // Refresh the reported users list
+    } catch (e) {
+      print('Error deleting report: $e');
+      // Show an error message or perform error handling
     }
   }
 
@@ -79,6 +139,20 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Text(_reporter),
+            SizedBox(height: 16.0),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _blockDonor,
+                  child: Text("Block", style: TextStyle(color: Colors.red)),
+                ),
+                SizedBox(width: 16.0),
+                ElevatedButton(
+                  onPressed: _deleteReport,
+                  child: Text("Delete Report"),
+                ),
+              ],
+            ),
           ],
         ),
       ),
