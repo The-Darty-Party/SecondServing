@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
 import 'food_shared_screen.dart';
 
 import '/services/firebase_auth_service.dart';
@@ -47,13 +46,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       String uid = userCredential.user!.uid;
       await signUp(email, password, username, phoneNumber, uid);
 
-
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
         (route) => false,
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -79,14 +76,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-
   void _NavigateToFoodSharedScreen(String phoneNumber, String verificationId) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => FoodReceiverScreen()),
     );
   }
-
 
   bool _isPhoneNumberValid(String phoneNumber) {
     RegExp regExp = RegExp(r'^\+[1-9]\d{1,14}$');
@@ -102,12 +97,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.green,
+            color: Colors.black,
           ),
         ),
         backgroundColor: Colors.white,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.green),
+          icon: Icon(Icons.arrow_back, color: Colors.grey),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -121,56 +116,68 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(
                 fontSize: 35,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: Colors.black,
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: _usernameController,
-              style: TextStyle(color: Colors.green),
+              style: TextStyle(color: Colors.black),
               decoration: InputDecoration(
                 labelText: 'Username',
-                prefixIcon: Icon(Icons.person, color: Colors.green),
+                prefixIcon: Icon(Icons.person, color: Colors.grey),
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: _emailController,
-              style: TextStyle(color: Colors.green),
+              style: TextStyle(color: Colors.black),
               decoration: InputDecoration(
                 labelText: 'Email',
-                prefixIcon: Icon(Icons.email, color: Colors.green),
+                prefixIcon: Icon(Icons.email, color: Colors.grey),
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: _passwordController,
-              style: TextStyle(color: Colors.green),
+              style: TextStyle(color: Colors.grey),
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password',
-                prefixIcon: Icon(Icons.lock, color: Colors.green),
+                prefixIcon: Icon(Icons.lock, color: Colors.grey),
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: _phoneNumberController,
-              style: TextStyle(color: Colors.green),
+              style: TextStyle(color: Colors.black),
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: 'Phone Number',
-                prefixIcon: Icon(Icons.phone, color: Colors.green),
+                prefixIcon: Icon(Icons.phone, color: Colors.grey),
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () => _register(context),
-              child: Text('Register'),
-              style: ElevatedButton.styleFrom(primary: Colors.green),
+              child: Text(
+                'Register',
+                style: TextStyle(fontSize: 18.0, color: Colors.white),
+              ),
+              style: ButtonStyle(
+                elevation:
+                    MaterialStateProperty.all<double>(4.0), // Shadow elevation
+                minimumSize: MaterialStateProperty.all<Size>(
+                    Size(300, 48.0)), // Button width
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    Color(0xff14c81cb)), // Button background color
+                shadowColor: MaterialStateProperty.all<Color>(
+                    Colors.grey), // Shadow color
+              ),
             ),
           ],
         ),
