@@ -24,8 +24,11 @@ class _ReportScreenState extends State<ReportScreen> {
       String reporterId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
       try {
-        DocumentSnapshot<Map<String, dynamic>> mealDoc =
-            await FirebaseFirestore.instance.collection('meals').doc(mealId).get();
+        DocumentSnapshot<Map<String, dynamic>> mealDoc = await FirebaseFirestore
+            .instance
+            .collection('meals')
+            .doc(mealId)
+            .get();
         String mealName = mealDoc.data()?['name'] ?? '';
         String donorId = mealDoc.data()?['donorID'] ?? '';
 
@@ -69,8 +72,12 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Report Issue'),
-        backgroundColor: Colors.green,
+        leading: BackButton(color: Colors.black),
+        title: Text(
+          'Report Issue',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -89,7 +96,7 @@ class _ReportScreenState extends State<ReportScreen> {
               SizedBox(height: 8),
               TextFormField(
                 controller: _issueController,
-                style: TextStyle(color: Colors.green),
+                style: TextStyle(color: Colors.black),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the issue';
@@ -108,7 +115,7 @@ class _ReportScreenState extends State<ReportScreen> {
               SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
-                style: TextStyle(color: Colors.green),
+                style: TextStyle(color: Colors.black),
                 maxLines: 5,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -120,8 +127,8 @@ class _ReportScreenState extends State<ReportScreen> {
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _submitForm,
-                child: Text('Submit'),
-                style: ElevatedButton.styleFrom(primary: Colors.green),
+                child: Text('Send Report', style: TextStyle(color: Colors.red)),
+                style: ElevatedButton.styleFrom(primary: Colors.white),
               ),
             ],
           ),
