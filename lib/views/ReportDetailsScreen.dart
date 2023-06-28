@@ -30,10 +30,16 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
       if (reports.isNotEmpty) {
         final report = reports[0];
+
+        // Fetch reporter name based on reporterID
+        final reporterSnapshot = await FirebaseFirestore.instance.collection('users').doc(report['reporterID']).get();
+        final reporterData = reporterSnapshot.data();
+        final reporterName = reporterData?['name'] ?? '';
+
         setState(() {
           _issue = report['issue'] ?? '';
           _description = report['description'] ?? '';
-          _reporter = report['reporterID'] ?? '';
+          _reporter = reporterName;
         });
       }
     } catch (e) {
