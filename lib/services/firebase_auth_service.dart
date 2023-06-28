@@ -63,8 +63,12 @@ class FirebaseAuthService {
         return 'No user found for that email.';
       } else if (e.code == 'wrong-password') {
         return 'Incorrect email or password.';
+      } else if (e.code == 'user-disabled') {
+        return 'This account has been disabled.';
+      } else if (e.code == 'too-many-requests') {
+        return 'Too many requests. Try again later.';
       } else {
-        return 'Too many login attempts. Please try again later.';
+        return 'An error occurred while trying to log in.';
       }
     }
   }
