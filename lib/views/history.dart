@@ -37,11 +37,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _fetchBookedMeals() async {
     try {
       final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-      final QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
-          .collection('meals')
-          .where('status', isEqualTo: 'booked')
-          .where('receiverID', isEqualTo: userId)
-          .get();
+      final QuerySnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance
+              .collection('meals')
+              .where('status', isEqualTo: 'booked')
+              .where('receiverID', isEqualTo: userId)
+              .get();
 
       final List<BookedMeal> meals = snapshot.docs.map((doc) {
         final data = doc.data();
@@ -93,8 +94,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('History'),
-        backgroundColor: Colors.green,
+        iconTheme: IconThemeData(color: Colors.black),
+        title: const Text('History', style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
       ),
       body: ListView.builder(
         itemCount: _bookedMeals.length,
@@ -138,7 +140,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 onPressed: () {
                   _updateMealStatus(meal.mealId);
                 },
-                child: Text('unbooked'),
+                child: Text('unbook'),
               ),
             ),
           );
