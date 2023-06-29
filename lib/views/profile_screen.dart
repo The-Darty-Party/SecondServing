@@ -12,7 +12,8 @@ class ProfileScreen extends StatelessWidget {
 
     return FutureBuilder<DocumentSnapshot>(
       future: _firestore.collection('users').doc(currentUser!.uid).get(),
-      builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+      builder:
+          (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
         }
@@ -25,29 +26,27 @@ class ProfileScreen extends StatelessWidget {
           return Text('User not found');
         }
 
-        Map<String, dynamic>? userData = snapshot.data!.data() as Map<String, dynamic>?;
+        Map<String, dynamic>? userData =
+            snapshot.data!.data() as Map<String, dynamic>?;
 
         String username = userData?['name'] ?? '';
         String email = userData?['email'] ?? '';
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Profile'),
-            backgroundColor: Colors.green,
+            iconTheme: IconThemeData(color: Colors.black),
+            title: Text('Profile', style: TextStyle(color: Colors.black)),
+            backgroundColor: Colors.white,
           ),
           body: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(30.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey,
-                  child: Icon(
-                    Icons.account_circle,
-                    size: 80,
-                    color: Colors.white,
-                  ),
+                  backgroundColor: Colors.black,
+                  backgroundImage: AssetImage('assets/AbdullAvatar.png'),
                 ),
                 SizedBox(height: 20),
                 Text(

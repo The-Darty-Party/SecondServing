@@ -23,8 +23,6 @@ void main() async {
       initialRoute: '/login',
       routes: {
         '/login': (context) => LoginScreen(),
-
-        // ... other routes for your app
       },
     ),
   );

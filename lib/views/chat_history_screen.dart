@@ -20,7 +20,9 @@ class ChatHistoryScreen extends StatelessWidget {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chats'),
+        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: Colors.white,
+        title: Text('Chats', style: TextStyle(color: Colors.black)),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: chatsCollection

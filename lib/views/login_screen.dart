@@ -104,84 +104,113 @@ Future<bool> isAdminEmail(String email) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: Colors.white,
-        alignment: Alignment.center,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Second Serving',
-                style: TextStyle(
-                  fontSize: 35,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _usernameController,
-                style: TextStyle(fontSize: 18.0, color: Colors.green),
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  prefixIcon: Icon(Icons.person, color: Colors.green),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                style: TextStyle(fontSize: 18.0, color: Colors.green),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock, color: Colors.green),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                      color: Colors.green,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
+      body: SingleChildScrollView(
+        child: Container(
+          color: Color(0xfafafa),
+          alignment: Alignment.center,
+          child: Padding(
+            padding: const EdgeInsets.all(1.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // add image
+                ShaderMask(
+                  shaderCallback: (rect) {
+                    return LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black, Colors.transparent],
+                    ).createShader(Rect.fromLTRB(0, 0, rect.width, 1500));
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: Image.asset(
+                    'assets/loginbg.png',
+                    height: 400,
+                    fit: BoxFit.contain,
                   ),
-                  border: OutlineInputBorder(),
                 ),
-              ),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () => _login(context),
-                child: Text(
-                  'Login',
+
+                TextField(
+                  controller: _usernameController,
                   style: TextStyle(fontSize: 18.0, color: Colors.black),
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    prefixIcon: Icon(Icons.person, color: Colors.grey),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.green,
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: !_isPasswordVisible,
+                  style: TextStyle(fontSize: 18.0, color: Colors.black),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock, color: Colors.grey),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16.0),
-              TextButton(
-                onPressed: () => _navigateToRegisterScreen(context),
-                child: Text(
-                  'Register',
-                  style: TextStyle(fontSize: 18.0, color: Colors.green),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: () => _login(context),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(fontSize: 18.0, color: Colors.black),
+                  ),
+                  style: ButtonStyle(
+                    elevation: MaterialStateProperty.all<double>(
+                        4.0), // Shadow elevation
+                    minimumSize: MaterialStateProperty.all<Size>(
+                        Size(300, 48.0)), // Button width
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                        Colors.white), // Button background color
+                    shadowColor: MaterialStateProperty.all<Color>(
+                        Colors.grey), // Shadow color
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16.0),
-              TextButton(
-                onPressed: () => _forgotPassword(context),
-                child: Text(
-                  'Forgot Password',
-                  style: TextStyle(fontSize: 18.0, color: Colors.green),
+                SizedBox(
+                  height: 15,
                 ),
-              ),
-            ],
+                ElevatedButton(
+                  onPressed: () => _navigateToRegisterScreen(context),
+                  child: Text(
+                    'Register',
+                    style: TextStyle(fontSize: 18.0, color: Colors.white),
+                  ),
+                  style: ButtonStyle(
+                    elevation: MaterialStateProperty.all<double>(
+                        4.0), // Shadow elevation
+                    minimumSize: MaterialStateProperty.all<Size>(
+                        Size(300, 48.0)), // Button width
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                        Color(0xff14c81cb)), // Button background color
+                    shadowColor: MaterialStateProperty.all<Color>(
+                        Colors.grey), // Shadow color
+                  ),
+                ),
+
+                TextButton(
+                  onPressed: () => _forgotPassword(context),
+                  child: Text(
+                    'Forgot password?',
+                    style: TextStyle(fontSize: 18.0, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
