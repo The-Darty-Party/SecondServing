@@ -16,11 +16,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   String _issue = '';
   String _description = '';
   String _reporter = '';
+  bool _isBlocked = false; // Track if the user is blocked
 
   @override
   void initState() {
     super.initState();
     _fetchReportDetails();
+    _checkIfBlocked(); // Check if the user is blocked
   }
 
   Future<void> _fetchReportDetails() async {
@@ -55,24 +57,60 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     }
   }
 
-  // Function to block the donor
-  Future<void> _blockDonor() async {
+  Future<void> _checkIfBlocked() async {
     try {
-      // Create a new document in the 'blocked' collection
-      await FirebaseFirestore.instance.collection('blocked').add({
-        'donorId': widget.donorId,
-        'blocked': true,
+      final QuerySnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance
+              .collection('blocked')
+              .where('donorId', isEqualTo: widget.donorId)
+              .get();
+
+      setState(() {
+        _isBlocked = snapshot.docs.isNotEmpty;
+      });
+    } catch (e) {
+      print('Error checking if donor is blocked: $e');
+    }
+  }
+
+  // Function to block or unblock the donor
+  Future<void> _toggleBlockDonor() async {
+    try {
+      if (_isBlocked) {
+        // User is already blocked, so unblock them
+        await FirebaseFirestore.instance
+            .collection('blocked')
+            .where('donorId', isEqualTo: widget.donorId)
+            .get()
+            .then((snapshot) {
+          snapshot.docs.forEach((doc) {
+            doc.reference.delete();
+          });
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User unblocked successfully')),
+        );
+      } else {
+        // User is not blocked, so block them
+        await FirebaseFirestore.instance.collection('blocked').add({
+          'donorId': widget.donorId,
+          'blocked': true,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User blocked successfully')),
+        );
+      }
+
+      setState(() {
+        _isBlocked = !_isBlocked; // Toggle the blocked state
       });
 
-      // Show a success message or perform any other necessary actions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User blocked successfully')),
-      );
-
-      // Nevigate back to previous screen
+      // Navigate back to the previous screen
       Navigator.of(context).pop();
     } catch (e) {
-      print('Error blocking donor: $e');
+      print('Error blocking/unblocking donor: $e');
       // Show an error message or perform error handling
     }
   }
@@ -80,7 +118,6 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   // Function to delete the report
   Future<void> _deleteReport() async {
     try {
-      // Delete the report document
       await FirebaseFirestore.instance
           .collection('reports')
           .where('donorID', isEqualTo: widget.donorId)
@@ -91,12 +128,10 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         });
       });
 
-      // Show a success message or perform any other necessary actions
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Report deleted successfully')),
       );
 
-      // Nevigate back to previous screen
       Navigator.of(context).pop();
 
       // Refresh the reported users list
@@ -143,13 +178,20 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             Row(
               children: [
                 ElevatedButton(
-                  onPressed: _blockDonor,
+                  onPressed: _toggleBlockDonor,
                   style: ElevatedButton.styleFrom(
                     primary: Colors.white,
-                    onPrimary: Colors.red,
-                    side: BorderSide(color: Colors.red),
+                    onPrimary: _isBlocked ? Colors.green : Colors.red,
+                    side: BorderSide(
+                      color: _isBlocked ? Colors.green : Colors.red,
+                    ),
                   ),
-                  child: Text("Block", style: TextStyle(color: Colors.red)),
+                  child: Text(
+                    _isBlocked ? 'Unblock' : 'Block',
+                    style: TextStyle(
+                      color: _isBlocked ? Colors.green : Colors.red,
+                    ),
+                  ),
                 ),
                 SizedBox(width: 16.0),
                 ElevatedButton(
