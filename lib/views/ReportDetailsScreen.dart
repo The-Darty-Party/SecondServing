@@ -144,7 +144,6 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
               children: [
                 ElevatedButton(
                   onPressed: _blockDonor,
-                  // change button color to white with red borders
                   style: ElevatedButton.styleFrom(
                     primary: Colors.white,
                     onPrimary: Colors.red,
