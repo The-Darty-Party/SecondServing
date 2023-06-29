@@ -48,7 +48,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
   void initState() {
     super.initState();
     _fetchUserName();
-    _fetchMeals();
+    _fetchMealsStream();
   }
 
   Future<void> _fetchUserName() async {
@@ -68,20 +68,15 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
     }
   }
 
-  Future<void> _fetchMeals() async {
-    try {
-      final String userId = _firebaseAuth.currentUser?.uid ?? '';
-      Query<Map<String, dynamic>> mealsQuery =
-          FirebaseFirestore.instance.collection('meals');
+  Stream<List<Meal>> _fetchMealsStream() {
+    final String userId = _firebaseAuth.currentUser?.uid ?? '';
+    Query<Map<String, dynamic>> mealsQuery =
+        FirebaseFirestore.instance.collection('meals');
 
-      
-        mealsQuery = mealsQuery.orderBy('date', descending: true);
-      
+    mealsQuery = mealsQuery.orderBy('date', descending: true);
 
-      final QuerySnapshot<Map<String, dynamic>> snapshot =
-          await mealsQuery.get();
-
-      final List<Meal> meals = snapshot.docs
+    return mealsQuery.snapshots().map((snapshot) {
+      return snapshot.docs
           .map((doc) {
             final data = doc.data();
             final String mealStatus = data['status'] ?? '';
@@ -111,13 +106,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           })
           .whereType<Meal>()
           .toList();
-
-      setState(() {
-        _meals = meals;
-      });
-    } catch (e) {
-      print('Error fetching meals: $e');
-    }
+    });
   }
 
   void _navigateToMealDetails(Meal meal) {
@@ -148,7 +137,6 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
               );
             },
           ),
-          
         ],
       ),
       drawer: Drawer(
@@ -156,7 +144,7 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: Colors.white,
                 image: DecorationImage(
                     image: AssetImage('assets/drawerbg.png'),
                     fit: BoxFit.cover),
@@ -216,54 +204,77 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
           ],
         ),
       ),
-      body: ListView.builder(
-        itemCount: _meals.length,
-        itemBuilder: (context, index) {
-          final meal = _meals[index];
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              contentPadding: EdgeInsets.all(16),
-              leading: SizedBox(
-                width: 80,
-                height: 80,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    meal.photo,
-                    fit: BoxFit.cover,
+      body: StreamBuilder<List<Meal>>(
+        stream: _fetchMealsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            _meals = snapshot.data!;
+            return ListView.builder(
+              itemCount: _meals.length,
+              itemBuilder: (context, index) {
+                final meal = _meals[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(16),
+                    leading: SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          meal.photo,
+                          fit: BoxFit.cover,
+                          errorBuilder: (BuildContext context, Object exception,
+                              StackTrace? stackTrace) {
+                            // Error handling logic goes here
+                            // You can display a placeholder image or show an error message
+                            return Placeholder(); // Placeholder widget to display when there's an error
+                          },
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      meal.name,
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 8),
+                        Text(
+                          'Location: ${meal.location}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Description: ${meal.description}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Status: ${meal.status}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _navigateToMealDetails(meal);
+                    },
                   ),
-                ),
-              ),
-              title: Text(
-                meal.name,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 8),
-                  Text(
-                    'Location: ${meal.location}',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Description: ${meal.description}',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Status: ${meal.status}',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-              onTap: () {
-                _navigateToMealDetails(meal);
+                );
               },
-            ),
-          );
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text('Error fetching meals: ${snapshot.error}'),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
         },
       ),
       floatingActionButton: FloatingActionButton(
