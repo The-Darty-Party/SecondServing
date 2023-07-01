@@ -1,4 +1,3 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,12 +5,9 @@ import 'package:secondserving/views/share_meal_screen.dart';
 import '../models/meal_model.dart';
 import 'chat_history_screen.dart';
 import 'profile_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'meal_details.dart' as meal_details;
-import 'history.dart' as history;
-
-import 'messages_screen.dart';
+import 'history_screen.dart' as history;
+import '../constants/ui_constants.dart';
 
 class FoodReceiverScreen extends StatefulWidget {
   const FoodReceiverScreen({Key? key}) : super(key: key);
@@ -281,11 +277,11 @@ class _FoodReceiverScreenState extends State<FoodReceiverScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => DishForm()),
+            MaterialPageRoute(builder: (context) => MealForm()),
           );
         },
         child: Icon(Icons.add),
-        backgroundColor: Color(0xff14c81cb),
+        backgroundColor: AppColors.primaryColor,
       ),
     );
   }
