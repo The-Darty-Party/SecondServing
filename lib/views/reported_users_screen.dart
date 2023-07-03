@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'reportDetailsScreen.dart';
+import 'package:secondserving/views/report_details_screen.dart';
 
 class ReportedUser {
   final String donorId;
