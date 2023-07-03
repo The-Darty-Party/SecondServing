@@ -3,10 +3,9 @@ import 'package:secondserving/views/report_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../models/meal_model.dart';
-import 'food_shared_screen.dart';
 import 'messages_screen.dart';
+import '../constants/ui_constants.dart';
 
 class MealDetailsScreen extends StatefulWidget {
   final Meal meal;
@@ -236,8 +235,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       },
                       child: Column(
                           children: [Icon(Icons.map), Text('Google Map')]),
-                      style:
-                          ElevatedButton.styleFrom(primary: Color(0xffbcdfa6)),
+                      style: ElevatedButton.styleFrom(
+                          primary: AppColors.seconderyColor),
                     ),
                   ],
                 ),
