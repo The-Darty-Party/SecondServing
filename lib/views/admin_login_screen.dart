@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:secondserving/views/register_screen.dart';
 import 'package:secondserving/services/firebase_auth_service.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:secondserving/views/share_meal_screen.dart';
-import 'food_shared_screen.dart';
-import 'reportedUsers.dart';
+import 'reported_users_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -26,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (username.isNotEmpty && password.isNotEmpty) {
       bool isAdmin = await _checkAdminEmail(username);
       if (isAdmin) {
-        String? result = await firebaseAuth.signInWithEmailAndPassword(username, password);
+        String? result =
+            await firebaseAuth.signInWithEmailAndPassword(username, password);
         if (result == 'Logged in successfully!') {
           Navigator.push(
             context,
@@ -37,18 +35,23 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         }
       } else {
-        final snackBar = SnackBar(content: Text('You are not an administrator.'));
+        final snackBar =
+            SnackBar(content: Text('You are not an administrator.'));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
-      final snackBar = SnackBar(content: Text('Please enter username and password'));
+      final snackBar =
+          SnackBar(content: Text('Please enter username and password'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
   Future<bool> _checkAdminEmail(String email) async {
-    final QuerySnapshot<Map<String, dynamic>> snapshot =
-        await FirebaseFirestore.instance.collection('admin').where('email', isEqualTo: email).get();
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+        .instance
+        .collection('admin')
+        .where('email', isEqualTo: email)
+        .get();
 
     return snapshot.docs.isNotEmpty;
   }
@@ -67,7 +70,8 @@ class _LoginScreenState extends State<LoginScreen> {
           .sendPasswordResetEmail(email: username)
           .then((value) {
         final snackBar = SnackBar(
-          content: Text('Password reset email sent. Please check your email inbox.'),
+          content:
+              Text('Password reset email sent. Please check your email inbox.'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }).catchError((error) {
