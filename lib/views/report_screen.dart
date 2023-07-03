@@ -40,15 +40,15 @@ class _ReportScreenState extends State<ReportScreen> {
           'donorID': donorId,
         });
 
+        _issueController.clear();
+        _descriptionController.clear();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Report submitted successfully!'),
             duration: Duration(seconds: 2),
           ),
         );
-
-        _issueController.clear();
-        _descriptionController.clear();
+        Navigator.of(context).pop();
       } catch (e) {
         print('Error submitting report: $e');
         ScaffoldMessenger.of(context).showSnackBar(
